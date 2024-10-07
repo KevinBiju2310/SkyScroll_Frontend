@@ -1,21 +1,15 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import ProfilePage from "./pages/ProfilePage";
-import ProtectedRoute from "./ProtectedRoute/ProtectedRoute";
+import UserRoutes from "./routes/UserRoutes";
+import AirlineRoutes from "./routes/AirlineRoutes";
+import AdminRoutes from "./routes/AdminRoutes";
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/*" element={<UserRoutes />} />
+        <Route path="/airline/*" element={<AirlineRoutes />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
       </Routes>
     </Router>
   );

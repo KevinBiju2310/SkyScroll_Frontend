@@ -11,7 +11,10 @@ const Popup = ({ isOpen, onClose, children }) => {
             <X size={24} />
           </button>
         </div>
-        {children}
+        {/* Add scrolling within the popup */}
+        <div className="max-h-[80vh] overflow-y-auto p-4">
+          {children}
+        </div>
       </div>
     </div>
   );

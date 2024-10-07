@@ -12,6 +12,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUser } from "../redux/userSlice";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = ({ onSwitchToRegister, onClose }) => {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
   });
 
   const dispatch = useDispatch();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -75,7 +76,7 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
         onClose();
       }
 
-      // navigate("/");
+      navigate("/");
       setSnackbar({
         open: true,
         message: "Registration successful!",

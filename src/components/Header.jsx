@@ -23,7 +23,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
-
+  console.log(user);
   const openRegisterPopup = () => {
     setPopupContent("register");
     setIsPopupOpen(true);
@@ -49,6 +49,7 @@ const Header = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    navigate("/");
   };
 
   useEffect(() => {
