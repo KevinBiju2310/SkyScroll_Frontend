@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
 import { TextField, Button, Grid, Typography, Box, Paper } from "@mui/material";
-import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance";
 
 const PersonalInformation = () => {
   const [personalInfo, setPersonalInfo] = useState({
@@ -23,9 +23,7 @@ const PersonalInformation = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/profile", {
-          withCredentials: true,
-        });
+        const response = await axiosInstance.get("/profile");
         const data = response.data.data;
         // console.log(data.email);
         setPersonalInfo({
@@ -49,16 +47,14 @@ const PersonalInformation = () => {
     setPassportDetails({ ...passportDetails, [e.target.name]: e.target.value });
   };
 
-  const handlePersonalInfoSubmit = async(e) => {
+  const handlePersonalInfoSubmit = async (e) => {
     e.preventDefault();
     try {
-        const response = await axios.put("http://localhost:5000/profile", personalInfo, {
-          withCredentials: true,
-        });
-        console.log("Personal info updated:", response.data);
-      } catch (error) {
-        console.error("Error updating personal info:", error);
-      }
+      const response = await axiosInstance.put("/profile", personalInfo);
+      console.log("Personal info updated:", response.data);
+    } catch (error) {
+      console.error("Error updating personal info:", error);
+    }
     console.log("Saving personal info:", personalInfo);
   };
 

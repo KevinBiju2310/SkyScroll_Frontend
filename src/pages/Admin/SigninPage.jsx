@@ -12,10 +12,10 @@ import {
   Container,
 } from "@mui/material";
 import { Visibility, VisibilityOff, Login } from "@mui/icons-material";
-import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../redux/userSlice";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstance";
 
 const AdminSignIn = () => {
   const [email, setEmail] = useState("");
@@ -28,14 +28,10 @@ const AdminSignIn = () => {
     e.preventDefault();
     try {
       // console.log(email,password)
-      const response = await axios.post(
-        "http://localhost:5000/admin/signin",
-        {
-          email,
-          password,
-        },
-        { withCredentials: true }
-      );
+      const response = await axiosInstance.post("/admin/signin", {
+        email,
+        password,
+      });
       const admin = response.data.data;
       console.log(admin, "siginin page");
 

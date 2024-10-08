@@ -9,10 +9,10 @@ import {
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import { useState } from "react";
-import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUser } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../utils/axiosInstance";
 
 const LoginForm = ({ onSwitchToRegister, onClose }) => {
   const [formData, setFormData] = useState({
@@ -58,14 +58,10 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
 
     console.log(formData);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/signin",
-        {
-          email: formData.email,
-          password: formData.password,
-        },
-        { withCredentials: true }
-      );
+      const response = await axiosInstance.post("/signin", {
+        email: formData.email,
+        password: formData.password,
+      });
 
       const user = response.data.data;
       console.log(user);

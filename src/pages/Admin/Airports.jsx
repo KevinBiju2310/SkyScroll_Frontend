@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import { Plane, X, Edit, Trash2 } from "lucide-react";
-import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance";
 import {
   MapContainer,
   TileLayer,
@@ -24,9 +24,7 @@ const Airports = () => {
 
   const fetchAirports = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/admin/airports", {
-        withCredentials: true,
-      });
+      const response = await axiosInstance.get("/admin/airports");
       setAirports(response.data.response);
       setLoading(false);
     } catch (err) {
@@ -54,11 +52,9 @@ const Airports = () => {
 
   const handleDeleteAirport = async (airportId) => {
     try {
-      await axios.delete(`http://localhost:5000/admin/${airportId}`, {
-        withCredentials: true,
-      });
+      await axiosInstance.delete(`/admin/${airportId}`);
       setAirports(airports.filter((airport) => airport._id !== airportId));
-      navigate("/admin/airports")
+      navigate("/admin/airports");
     } catch (err) {
       console.error("Failed to delete airport:", err);
       alert("Failed to delete airport. Please try again.");

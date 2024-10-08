@@ -1,23 +1,24 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
-import axios from "axios";
+import ConfirmationModal from "../../components/ConfirmationModal";
+import axiosInstance from "../../utils/axiosInstance";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [actionType, setActionType] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/admin/users", {
-          withCredentials: true,
-        });
-        console.log(response);
+        const response = await axiosInstance.get("/admin/users");
         setUsers(response.data.response);
         setLoading(false);
       } catch (error) {
-        console.log(error)
+        console.log(error);
         setError("Failed to fetch users");
         setLoading(false);
       }
@@ -26,23 +27,35 @@ const Users = () => {
     fetchUsers();
   }, []);
 
-  const handleToggleBlock = async (userId) => {
+  const openModal = (user, action) => {
+    setSelectedUser(user);
+    setActionType(action);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedUser) return;
+
     try {
-      await axios.patch(
-        `http://localhost:5000/admin/toggleblock/${userId}`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
+      await axiosInstance.patch(`/admin/toggleblock/${selectedUser._id}`, {});
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
-          user._id === userId ? { ...user, isBlocked: !user.isBlocked } : user
+          user._id === selectedUser._id
+            ? { ...user, isBlocked: !user.isBlocked }
+            : user
         )
       );
     } catch (err) {
       console.error("Failed to toggle user block status", err);
+    } finally {
+      setIsModalOpen(false); // Close the modal
+      setSelectedUser(null); // Reset selected user
     }
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
   };
 
   if (loading)
@@ -92,7 +105,9 @@ const Users = () => {
                 </td>
                 <td className="py-3 px-4">
                   <button
-                    onClick={() => handleToggleBlock(user._id)}
+                    onClick={() =>
+                      openModal(user, user.isBlocked ? "Unblock" : "Block")
+                    }
                     className={`px-3 py-1 rounded ${
                       user.isBlocked
                         ? "bg-green-500 hover:bg-green-600 text-white"
@@ -107,6 +122,16 @@ const Users = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+        message={`Are you sure you want to ${actionType} the user "${
+          selectedUser ? selectedUser.username : ""
+        }"?`}
+      />
     </AdminLayout>
   );
 };

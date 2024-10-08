@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import { TextField, Button, Box, Grid, Typography, Paper } from "@mui/material";
-import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance";
 
 const AddAirport = () => {
   const navigate = useNavigate();
@@ -56,15 +56,10 @@ const AddAirport = () => {
     setErrorMessage(""); // Reset any previous error message
 
     try {
-        
       // API call to add the airport
-      const response = await axios.post(
-        "http://localhost:5000/admin/addairport",
-        airport,
-        { withCredentials: true }
-      );
+      const response = await axiosInstance.post("/admin/addairport", airport);
       console.log(response);
-      
+
       console.log("Airport added:", response.data);
       navigate("/admin/airports");
     } catch (error) {

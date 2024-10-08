@@ -10,7 +10,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 
 const RegisterForm = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
@@ -70,7 +70,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     }
     console.log(formData);
     try {
-      const response = await axios.post("http://localhost:5000/register", {
+      const response = await axiosInstance.post("/register", {
         username: formData.username,
         email: formData.email,
         password: formData.password,
