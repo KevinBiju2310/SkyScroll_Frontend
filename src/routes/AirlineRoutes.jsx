@@ -1,8 +1,15 @@
+import { Routes, Route } from "react-router-dom";
+// import ProtectedRoute from "../ProtectedRoute/ProtectedRoute";
+import LogIn from "../pages/Airline/LogIn";
+import RegistrationForm from "../pages/Airline/RegistrationForm";
 
-const AirlineRoutes = () => {
+const UserRoutes = () => {
   return (
-    <div>AirlineRoutes</div>
-  )
-}
+    <Routes>
+      <Route path="" element={<LogIn />} />
+      <Route path="register" element={<RegistrationForm />} />
+    </Routes>
+  );
+};
 
-export default AirlineRoutes
+export default UserRoutes;

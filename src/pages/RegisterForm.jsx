@@ -11,6 +11,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import { useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
+import OtpForm from "./OtpForm"; // Ensure you import OtpForm
 
 const RegisterForm = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
@@ -24,6 +25,8 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     message: "",
     isError: false,
   });
+  const [showOtpForm, setShowOtpForm] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -62,24 +65,27 @@ const RegisterForm = ({ onSwitchToLogin }) => {
 
     if (formData.password !== formData.confirmPassword) {
       setSnackbar({
-        open: "true",
-        message: "Password don't match",
+        open: true,
+        message: "Passwords don't match.",
         isError: true,
       });
       return false;
     }
-    console.log(formData);
+
     try {
       const response = await axiosInstance.post("/register", {
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
+      const userId = response.data.data._id;
+      setUserId(userId);
       setSnackbar({
         open: true,
-        message: "Registration successful!",
+        message: "Registration successful! Please verify your OTP.",
         isError: false,
       });
+      setShowOtpForm(true); // Show the OTP form after successful registration
       setFormData({
         username: "",
         email: "",
@@ -94,6 +100,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
       });
     }
   };
+
   return (
     <Box display="flex">
       <Box flex={1}>
@@ -110,95 +117,106 @@ const RegisterForm = ({ onSwitchToLogin }) => {
         flexDirection="column"
         justifyContent="center"
       >
-        <Typography variant="h4" fontWeight="bold" align="center" gutterBottom>
-          Register
-        </Typography>
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          display="flex"
-          flexDirection="column"
-          gap={3}
-        >
-          <TextField
-            name="username"
-            label="Username"
-            variant="outlined"
-            value={formData.username}
-            onChange={handleChange}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            name="email"
-            label="Email"
-            variant="outlined"
-            value={formData.email}
-            onChange={handleChange}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            name="password"
-            label="Password"
-            variant="outlined"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            name="confirmPassword"
-            label="Confirm Password"
-            variant="outlined"
-            type="password"
-            fullWidth
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            size="large"
-            fullWidth
-            sx={{ mt: 2 }}
-          >
-            Register
-          </Button>
-        </Box>
-        <Typography align="center" mt={3}>
-          Already have an account?{" "}
-          <Button onClick={onSwitchToLogin} color="primary">
-            Login
-          </Button>
-        </Typography>
+        {showOtpForm ? (
+          <OtpForm userId={userId} />
+        ) : (
+          <>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              align="center"
+              gutterBottom
+            >
+              Register
+            </Typography>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              display="flex"
+              flexDirection="column"
+              gap={3}
+            >
+              <TextField
+                name="username"
+                label="Username"
+                variant="outlined"
+                value={formData.username}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                name="email"
+                label="Email"
+                variant="outlined"
+                value={formData.email}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                name="password"
+                label="Password"
+                variant="outlined"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                name="confirmPassword"
+                label="Confirm Password"
+                variant="outlined"
+                type="password"
+                fullWidth
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                size="large"
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Register
+              </Button>
+            </Box>
+            <Typography align="center" mt={3}>
+              Already have an account?{" "}
+              <Button onClick={onSwitchToLogin} color="primary">
+                Login
+              </Button>
+            </Typography>
+          </>
+        )}
       </Box>
       <Snackbar
         open={snackbar.open}
