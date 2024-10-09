@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import background from "../../assets/background.jpg";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstance";
 
 const RegistrationForm = () => {
   const [step, setStep] = useState(1);
@@ -16,6 +17,7 @@ const RegistrationForm = () => {
     airlineLicense: null,
     insuranceCertificate: null,
   });
+  // console.log(formData)
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -31,10 +33,42 @@ const RegistrationForm = () => {
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log("Registration submitted", formData);
+
+    try {
+      const submitData = new FormData();
+      submitData.append("airlineName", formData.companyName);
+      submitData.append("iataCode", formData.iataCode);
+      submitData.append("country", formData.country);
+      submitData.append("username", formData.contactName);
+      submitData.append("email", formData.contactEmail);
+      submitData.append("phone", formData.contactPhone);
+      submitData.append("designation", formData.designation);
+
+      if (formData.airlineLicense) {
+        submitData.append("licenseDocument", formData.airlineLicense);
+      }
+      if (formData.insuranceCertificate) {
+        submitData.append(
+          "insuranceDocument",
+          formData.insuranceCertificate
+        );
+      }
+
+      // Post form data to the backend
+      const response = await axiosInstance.post(
+        "/airline/register",
+        submitData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      console.log("Registration successful:", response);
+      // Navigate to another page or show success message
+      // navigate("/success");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
   };
 
   const renderStep = () => {
