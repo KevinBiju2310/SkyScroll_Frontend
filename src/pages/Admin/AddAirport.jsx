@@ -19,7 +19,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 // Replace with your Mapbox access token
 mapboxgl.accessToken =
-  "";
+  "pk.eyJ1Ijoic2t5c2Nyb2xsIiwiYSI6ImNtMjdmcDVsdjBua3kybHM2Yjg5eHFjZW8ifQ.DDjEvia0H06UVd5hFCzGPw";
 
 const AddAirport = () => {
   const navigate = useNavigate();

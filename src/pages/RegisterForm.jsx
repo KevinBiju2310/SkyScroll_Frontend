@@ -15,7 +15,7 @@ import OtpForm from "./OtpForm";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 const client_id =
-  "";
+  "1084384237911-tts03h5ai0d2p0alrj03283s7hainnqs.apps.googleusercontent.com";
 
 const RegisterForm = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState({

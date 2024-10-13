@@ -10,6 +10,7 @@ const AddAirport = React.lazy(() => import("../pages/Admin/AddAirport"));
 const AirlineLoginDetails = React.lazy(() =>
   import("../pages/Admin/AirlineLoginDetails")
 );
+const UpdateAirport = React.lazy(() => import("../pages/Admin/UpdateAirport"));
 
 const AdminRoutes = () => {
   return (
@@ -21,6 +22,7 @@ const AdminRoutes = () => {
           <Route path="users" element={<AdminGetUsers />} />
           <Route path="airports" element={<Airports />} />
           <Route path="airports/addairport" element={<AddAirport />} />
+          <Route path="airports/updateairport/:id" element={<UpdateAirport />} />
           <Route path="airline-login" element={<AirlineLoginDetails />} />
         </Route>
       </Routes>

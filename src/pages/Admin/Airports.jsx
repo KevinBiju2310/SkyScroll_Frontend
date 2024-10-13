@@ -53,9 +53,15 @@ const Airports = () => {
     setIsConfirmationModalOpen(true);
   };
 
+  const handleUpdateAirport = (airportId) => {
+    navigate(`/admin/airports/updateairport/${airportId}`);
+  };
+
   const handleDeleteAirport = async () => {
     try {
-      setAirports(airports.filter((airport) => airport._id !== airportToDelete));
+      setAirports(
+        airports.filter((airport) => airport._id !== airportToDelete)
+      );
       setIsConfirmationModalOpen(false);
       handleClosePopup();
       await axiosInstance.delete(`/admin/${airportToDelete}`);
@@ -184,14 +190,16 @@ const Airports = () => {
 
                 <div className="mt-6 flex space-x-4">
                   <button
-                    // onClick={() => handleUpdateAirport(selectedAirport)}
+                    onClick={() => handleUpdateAirport(selectedAirport._id)}
                     className="flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition duration-300"
                   >
                     <Edit size={18} className="mr-2" />
                     Update
                   </button>
                   <button
-                    onClick={() => handleOpenConfirmationModal(selectedAirport._id)}
+                    onClick={() =>
+                      handleOpenConfirmationModal(selectedAirport._id)
+                    }
                     className="flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300"
                   >
                     <Trash2 size={18} className="mr-2" />
