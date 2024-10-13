@@ -1,19 +1,20 @@
+import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "../ProtectedRoute/ProtectedRoute";
-import Home from "../pages/HomePage";
-import Profile from "../pages/ProfilePage";
-// Import other user components as needed
+
+const Home = React.lazy(() => import("../pages/HomePage"));
+const Profile = React.lazy(() => import("../pages/ProfilePage"));
 
 const UserRoutes = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route
-        element={<ProtectedRoute userType="user" allowedRoles={["user"]} />}
-      >
-        <Route path="/profile" element={<Profile />} />
-      </Route>
-    </Routes>
+    <Suspense fallback={<div>Loading User Pages...</div>}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route element={<ProtectedRoute userOnly />}>
+          <Route path="profile" element={<Profile />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 };
 

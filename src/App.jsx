@@ -1,16 +1,20 @@
+import React, { Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import UserRoutes from "./routes/UserRoutes";
-import AirlineRoutes from "./routes/AirlineRoutes";
-import AdminRoutes from "./routes/AdminRoutes";
+
+const UserRoutes = React.lazy(() => import("./routes/UserRoutes"));
+const AirlineRoutes = React.lazy(() => import("./routes/AirlineRoutes"));
+const AdminRoutes = React.lazy(() => import("./routes/AdminRoutes"));
 
 const App = () => {
   return (
     <Router>
-      <Routes>
-        <Route path="/*" element={<UserRoutes />} />
-        <Route path="/airline/*" element={<AirlineRoutes />} />
-        <Route path="/admin/*" element={<AdminRoutes />} />
-      </Routes>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/*" element={<UserRoutes />} />
+          <Route path="/airline/*" element={<AirlineRoutes />} />
+          <Route path="/admin/*" element={<AdminRoutes />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 };

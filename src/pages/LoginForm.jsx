@@ -13,6 +13,11 @@ import { useDispatch } from "react-redux";
 import { setUser } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+
+const client_id =
+  "";
+// console.log(client_id);
 
 const LoginForm = ({ onSwitchToRegister, onClose }) => {
   const [formData, setFormData] = useState({
@@ -35,6 +40,33 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    try {
+      const response = await axiosInstance.post("/signin-google", {
+        token: credentialResponse.credential,
+      });
+      const user = response.data.data;
+      console.log(user);
+      setSnackbar({
+        open: true,
+        message: "Google login successful!",
+        isError: false,
+      });
+      dispatch(setUser(user));
+      // Save the user and redirect
+      // For simplicity: window.localStorage.setItem('token', user.token);
+      // navigate("/");
+    } catch (error) {
+      console.log(error);
+      setSnackbar({
+        open: true,
+        message: "Google login failed!",
+        isError: true,
+      });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -91,93 +123,110 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
     }
   };
   return (
-    <Box display="flex">
-      <Box flex={1}>
-        <img
-          src="https://png.pngtree.com/background/20230403/original/pngtree-travel-plane-box-picture-image_2274211.jpg"
-          alt="Login"
-          style={{ height: "100%", objectFit: "cover", width: "100%" }}
-        />
-      </Box>
-      <Box
-        flex={1}
-        p={5}
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-      >
-        <Typography variant="h4" fontWeight="bold" align="center" gutterBottom>
-          Login
-        </Typography>
+    <GoogleOAuthProvider clientId={client_id}>
+      <Box display="flex">
+        <Box flex={1}>
+          <img
+            src="https://png.pngtree.com/background/20230403/original/pngtree-travel-plane-box-picture-image_2274211.jpg"
+            alt="Login"
+            style={{ height: "100%", objectFit: "cover", width: "100%" }}
+          />
+        </Box>
         <Box
-          component="form"
-          onSubmit={handleSubmit}
+          flex={1}
+          p={5}
           display="flex"
           flexDirection="column"
-          gap={3}
+          justifyContent="center"
         >
-          <TextField
-            name="email"
-            label="Email"
-            variant="outlined"
-            value={formData.email}
-            onChange={handleChange}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            name="password"
-            label="Password"
-            variant="outlined"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            size="large"
-            fullWidth
-            sx={{ mt: 2 }}
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            align="center"
+            gutterBottom
           >
             Login
-          </Button>
+          </Typography>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            display="flex"
+            flexDirection="column"
+            gap={3}
+          >
+            <TextField
+              name="email"
+              label="Email"
+              variant="outlined"
+              value={formData.email}
+              onChange={handleChange}
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              name="password"
+              label="Password"
+              variant="outlined"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              size="large"
+              fullWidth
+              sx={{ mt: 2 }}
+            >
+              Login
+            </Button>
+            <GoogleLogin
+              onSuccess={handleGoogleLoginSuccess}
+              onError={() =>
+                setSnackbar({
+                  open: true,
+                  message: "Google login failed!",
+                  isError: true,
+                })
+              }
+            />
+          </Box>
+          <Typography align="center" mt={3}>
+            Don{"'"}t have an account?{" "}
+            <Button onClick={onSwitchToRegister} color="primary">
+              Register
+            </Button>
+          </Typography>
         </Box>
-        <Typography align="center" mt={3}>
-          Don{"'"}t have an account?{" "}
-          <Button onClick={onSwitchToRegister} color="primary">
-            Register
-          </Button>
-        </Typography>
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={800}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          message={snackbar.message}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          ContentProps={{
+            sx: {
+              backgroundColor: snackbar.isError ? "error.main" : "success.main",
+            },
+          }}
+        />
       </Box>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={800}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        message={snackbar.message}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        ContentProps={{
-          sx: {
-            backgroundColor: snackbar.isError ? "error.main" : "success.main",
-          },
-        }}
-      />
-    </Box>
+    </GoogleOAuthProvider>
   );
 };
 

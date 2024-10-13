@@ -1,30 +1,31 @@
-import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({ userType, allowedRoles }) => {
+const ProtectedRoute = ({ adminOnly, airlineOnly, userOnly }) => {
   const user = useSelector((state) => state.user.user);
-  console.log(user);
   console.log(user.role);
+  
   if (!user) {
-    switch (userType) {
-      case "user":
-        return <Navigate to="/" replace />;
-      case "airline":
-        return <Navigate to="/airline/login" replace />;
-      case "admin":
-        return <Navigate to="/admin/login" replace />;
-      default:
-        return <Navigate to="/" replace />;
-    }
+    // If the user is not logged in, redirect to login page
+    return <Navigate to="/" />;
   }
 
-  // Check if the user has the required role
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If user doesn't have the required role, redirect to an unauthorized page or home
-    return <Navigate to="/" replace />;
+  if (adminOnly && user.role !== "admin") {
+    // Redirect if not an admin
+    return <Navigate to="/unauthorized" />;
   }
 
-  // If user is logged in and has the required role, render the child routes
+  if (airlineOnly && user.role !== "airline") {
+    // Redirect if not an airline user
+    return <Navigate to="/unauthorized" />;
+  }
+
+  if (userOnly && user.role !== "user") {
+    // Redirect if not a regular user
+    return <Navigate to="/unauthorized" />;
+  }
+
+  // If all checks pass, render the children (protected component)
   return <Outlet />;
 };
 

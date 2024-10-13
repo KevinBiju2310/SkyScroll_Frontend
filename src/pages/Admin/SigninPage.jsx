@@ -10,6 +10,7 @@ import {
   IconButton,
   Link,
   Container,
+  Snackbar,
 } from "@mui/material";
 import { Visibility, VisibilityOff, Login } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
@@ -24,8 +25,36 @@ const AdminSignIn = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    isError: false,
+  });
+
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!email || !password) {
+      setSnackbar({
+        open: true,
+        message: "Please fill in all fields",
+        isError: true,
+      });
+      return false;
+    }
+
+    if (!isValidEmail(email)) {
+      setSnackbar({
+        open: true,
+        message: "Enter a valid email address",
+        isError: true,
+      });
+      return false;
+    }
     try {
       // console.log(email,password)
       const response = await axiosInstance.post("/admin/signin", {
@@ -34,15 +63,31 @@ const AdminSignIn = () => {
       });
       const admin = response.data.data;
       console.log(admin, "siginin page");
+      setSnackbar({
+        open: true,
+        message: "Successfull Signin",
+        isError: false,
+      });
 
       dispatch(setUser(admin));
 
       setPassword("");
       setEmail("");
 
-      navigate("/admin/dashboard");
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 1000);
     } catch (error) {
       console.error("Error Occured: ", error);
+      const errorMessage =
+        error.response && error.response.data && error.response.data.error
+          ? error.response.data.error
+          : "Login failed. Please try again.";
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        isError: true,
+      });
     }
     console.log("Sign in attempt with:", { email, password });
   };
@@ -57,6 +102,18 @@ const AdminSignIn = () => {
         bgcolor: "background.default",
       }}
     >
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={800}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        ContentProps={{
+          sx: {
+            backgroundColor: snackbar.isError ? "error.main" : "success.main",
+          },
+        }}
+      />
       {/* <AdminHeader />, */}
       <Container maxWidth="sm">
         <Card elevation={3}>

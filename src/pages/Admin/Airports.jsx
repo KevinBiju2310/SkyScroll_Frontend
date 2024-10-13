@@ -10,12 +10,15 @@ import {
   Popup as LeafletPopup,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import ConfirmationModal from "../../components/ConfirmationModal"; // Assuming this is the path to your ConfirmationModal
 
 const Airports = () => {
   const [airports, setAirports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedAirport, setSelectedAirport] = useState(null);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [airportToDelete, setAirportToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,16 +48,19 @@ const Airports = () => {
     setSelectedAirport(null);
   };
 
-  //   const handleUpdateAirport = (airport) => {
-  // Navigate to update page with airport id
-  //     navigate(`/admin/airports/update/${airport._id}`);
-  //   };
+  const handleOpenConfirmationModal = (airportId) => {
+    setAirportToDelete(airportId);
+    setIsConfirmationModalOpen(true);
+  };
 
-  const handleDeleteAirport = async (airportId) => {
+  const handleDeleteAirport = async () => {
     try {
-      await axiosInstance.delete(`/admin/${airportId}`);
-      setAirports(airports.filter((airport) => airport._id !== airportId));
-      navigate("/admin/airports");
+      setAirports(airports.filter((airport) => airport._id !== airportToDelete));
+      setIsConfirmationModalOpen(false);
+      handleClosePopup();
+      await axiosInstance.delete(`/admin/${airportToDelete}`);
+      setAirportToDelete(null);
+      // fetchAirports();
     } catch (err) {
       console.error("Failed to delete airport:", err);
       alert("Failed to delete airport. Please try again.");
@@ -185,7 +191,7 @@ const Airports = () => {
                     Update
                   </button>
                   <button
-                    onClick={() => handleDeleteAirport(selectedAirport._id)}
+                    onClick={() => handleOpenConfirmationModal(selectedAirport._id)}
                     className="flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300"
                   >
                     <Trash2 size={18} className="mr-2" />
@@ -221,6 +227,13 @@ const Airports = () => {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={isConfirmationModalOpen}
+        onConfirm={handleDeleteAirport}
+        onCancel={() => setIsConfirmationModalOpen(false)}
+        message="Are you sure you want to delete this airport?"
+      />
     </AdminLayout>
   );
 };

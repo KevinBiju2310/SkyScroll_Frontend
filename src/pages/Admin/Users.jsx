@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import axiosInstance from "../../utils/axiosInstance";
+import Pagination from "../../components/Pagination";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -10,6 +11,9 @@ const Users = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionType, setActionType] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(7);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -58,6 +62,14 @@ const Users = () => {
     setSelectedUser(null);
   };
 
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
   if (loading)
     return (
       <AdminLayout>
@@ -85,7 +97,7 @@ const Users = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {currentUsers.map((user) => (
               <tr
                 key={user._id}
                 className="border-b border-gray-200 hover:bg-gray-100"
@@ -122,6 +134,12 @@ const Users = () => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(users.length / usersPerPage)}
+        onPageChange={handlePageChange}
+      />
 
       {/* Confirmation Modal */}
       <ConfirmationModal

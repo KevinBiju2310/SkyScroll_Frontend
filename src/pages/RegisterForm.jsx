@@ -11,7 +11,11 @@ import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import { useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
-import OtpForm from "./OtpForm"; // Ensure you import OtpForm
+import OtpForm from "./OtpForm";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+
+const client_id =
+  "";
 
 const RegisterForm = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
@@ -35,6 +39,32 @@ const RegisterForm = ({ onSwitchToLogin }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleGoogleRegisterSuccess = async (credentialResponse) => {
+    try {
+      console.log("Google Sign-In successful. Sending token to backend...");
+      const response = await axiosInstance.post("/register-google", {
+        token: credentialResponse.credential,
+      });
+      const user = response.data.data;
+      console.log(user);
+      setSnackbar({
+        open: true,
+        message: "Google registration successful!",
+        isError: false,
+      });
+
+      // Save the user and redirect
+      // window.localStorage.setItem('token', user.token);
+      // navigate('/');
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: "Google registration failed!",
+        isError: true,
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -208,6 +238,19 @@ const RegisterForm = ({ onSwitchToLogin }) => {
               >
                 Register
               </Button>
+
+              <GoogleOAuthProvider clientId={client_id}>
+                <GoogleLogin
+                  onSuccess={handleGoogleRegisterSuccess}
+                  onError={() =>
+                    setSnackbar({
+                      open: true,
+                      message: "Google registration failed!",
+                      isError: true,
+                    })
+                  }
+                />
+              </GoogleOAuthProvider>
             </Box>
             <Typography align="center" mt={3}>
               Already have an account?{" "}

@@ -1,16 +1,61 @@
 import { useState } from "react";
 import background from "../../assets/background.jpg";
 import { useNavigate } from "react-router-dom";
+import { Snackbar } from "@mui/material";
+import axiosInstance from "../../utils/axiosInstance";
 
 const LogIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    isError: false,
+  });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login submitted", { email, password });
+    
+    // Ensure all fields are filled
+    if (!email || !password) {
+      setSnackbar({
+        open: true,
+        message: "Please fill in all Fields",
+        isError: true,
+      });
+      return;
+    }
+
+    try {
+      // Sending login request to the backend
+      const response = await axiosInstance.post("/airline/login", {
+        email,
+        password,
+      });
+
+      // Assuming login is successful and you handle the next steps like redirecting
+      console.log(response);
+      setSnackbar({
+        open: true,
+        message: "Login Successful",
+        isError: false,  // Not an error, hence false
+      });
+
+      // Navigate to another page on success, e.g., dashboard
+      // navigate('/dashboard');
+      
+    } catch (error) {
+      // Handling error response from the backend
+      const errorMessage = error?.response?.data?.error || "Error Occurred, please try again later";
+
+      // Show the error message in the snackbar
+      setSnackbar({
+        open: true,
+        message: errorMessage, // Set the error message from the backend
+        isError: true,          // Error flag to set color to red
+      });
+    }
   };
 
   return (
@@ -20,6 +65,22 @@ const LogIn = () => {
     >
       <div className="bg-white p-8 rounded-lg shadow-md w-1/3 h-96">
         <h2 className="text-2xl font-bold mb-4">Airline Company Login</h2>
+
+        {/* Snackbar component to display messages */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}  // Show message for 3 seconds
+          onClose={() => setSnackbar({ ...snackbar, open: false })}  // Close snackbar
+          message={snackbar.message}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          ContentProps={{
+            sx: {
+              backgroundColor: snackbar.isError ? "error.main" : "success.main", // Red if error, green if success
+            },
+          }}
+        />
+
+        {/* Login Form */}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="email" className="block mb-2">
@@ -31,7 +92,6 @@ const LogIn = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-2 border rounded"
-              required
             />
           </div>
           <div className="mb-4">
@@ -44,7 +104,6 @@ const LogIn = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-2 border rounded"
-              required
             />
           </div>
           <button
@@ -54,6 +113,8 @@ const LogIn = () => {
             Login
           </button>
         </form>
+
+        {/* Redirect to registration */}
         <p className="mt-4 text-center">
           Don{"'"}t have an account yet?{" "}
           <button

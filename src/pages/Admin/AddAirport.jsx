@@ -1,8 +1,25 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
 import { useNavigate } from "react-router-dom";
-import { TextField, Button, Box, Grid, Typography, Paper } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Typography,
+  Paper,
+  Snackbar,
+  Alert,
+} from "@mui/material"; // Import Snackbar and Alert
 import axiosInstance from "../../utils/axiosInstance";
+import mapboxgl from "mapbox-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+import "mapbox-gl/dist/mapbox-gl.css";
+
+// Replace with your Mapbox access token
+mapboxgl.accessToken =
+  "";
 
 const AddAirport = () => {
   const navigate = useNavigate();
@@ -16,15 +33,68 @@ const AddAirport = () => {
     longitude: "",
     terminals: [],
   });
-
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const geocoder = useRef(null);
 
+  // Mapbox Initialization
+  useEffect(() => {
+    if (map.current) return;
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/streets-v11",
+      center: [0, 0],
+      zoom: 1,
+    });
+
+    geocoder.current = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl: mapboxgl,
+      types: "poi",
+      marker: false,
+    });
+
+    map.current.addControl(geocoder.current);
+
+    geocoder.current.on("result", (e) => {
+      const [lng, lat] = e.result.center;
+      const placeName = e.result.place_name;
+      const parts = placeName.split(", ");
+      const airportName = parts[0];
+      const city = parts[1] || "";
+      const country = parts[parts.length - 1] || "";
+      console.log(e.result, "API Result");
+
+      setAirport((prev) => ({
+        ...prev,
+        name: airportName,
+        city: city,
+        country: country,
+        latitude: lat.toFixed(6),
+        longitude: lng.toFixed(6),
+      }));
+
+      new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map.current);
+      map.current.flyTo({
+        center: [lng, lat],
+        zoom: 10,
+      });
+    });
+
+    return () => map.current.remove();
+  }, []);
+
+  // Handle input change for form fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setAirport((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Add a terminal
   const handleAddTerminal = () => {
     setAirport((prev) => ({
       ...prev,
@@ -32,51 +102,99 @@ const AddAirport = () => {
     }));
   };
 
+  // Handle terminal input change
   const handleTerminalChange = (index, value) => {
     const newTerminals = [...airport.terminals];
     newTerminals[index].terminalName = value;
     setAirport((prev) => ({ ...prev, terminals: newTerminals }));
   };
 
+  // Add a gate to a terminal
   const handleAddGate = (terminalIndex) => {
     const newTerminals = [...airport.terminals];
     newTerminals[terminalIndex].gates.push({ gateNumber: "" });
     setAirport((prev) => ({ ...prev, terminals: newTerminals }));
   };
 
+  // Handle gate input change
   const handleGateChange = (terminalIndex, gateIndex, value) => {
     const newTerminals = [...airport.terminals];
     newTerminals[terminalIndex].gates[gateIndex].gateNumber = value;
     setAirport((prev) => ({ ...prev, terminals: newTerminals }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Validation function for Step 1
+  const validateStep1 = () => {
+    const { name, city, country, latitude, longitude, code } = airport;
+
+    if (!name && !city && !country && !latitude && !longitude) {
+      setErrorMessage("Please select airport from map.");
+      setSnackbarOpen(true); // Open Snackbar
+      return false;
+    }
+
+    if (!code) {
+      setErrorMessage("Please fill in all fields.");
+      setSnackbarOpen(true); // Open Snackbar
+      return false;
+    }
+
+    return true;
+  };
+
+  // Validation function for Step 2 (Terminals and Gates)
+  const validateStep2 = () => {
+    for (let terminal of airport.terminals) {
+      if (!terminal.terminalName) {
+        setErrorMessage("Please fill in the terminal name.");
+        setSnackbarOpen(true); // Open Snackbar
+        return false;
+      }
+      for (let gate of terminal.gates) {
+        if (!gate.gateNumber) {
+          setErrorMessage("Please fill in the gate number.");
+          setSnackbarOpen(true); // Open Snackbar
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    // e.preventDefault();
     setLoading(true);
-    setErrorMessage(""); // Reset any previous error message
+    setErrorMessage("");
 
     try {
-      // API call to add the airport
       const response = await axiosInstance.post("/admin/addairport", airport);
-      console.log(response);
-
       console.log("Airport added:", response.data);
       navigate("/admin/airports");
     } catch (error) {
-      const errorResponse = error.response?.data?.message || error.message;
-      setErrorMessage(`Failed to add airport: ${errorResponse}`);
+      const errorResponse = error.response?.data?.error || error.message;
+      setErrorMessage(errorResponse);
+      setSnackbarOpen(true);
       console.error(errorResponse);
     } finally {
       setLoading(false);
     }
   };
 
+  // Move to the next step with validation
   const nextStep = () => {
-    setStep(step + 1);
+    if (step === 1 && validateStep1()) {
+      setStep(2);
+    } else if (step === 2 && validateStep2()) {
+      handleSubmit();
+    }
   };
 
-  const prevStep = () => {
-    setStep(step - 1);
+  const prevStep = () => setStep(step - 1);
+
+  // Handle Snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -87,30 +205,28 @@ const AddAirport = () => {
             Add New Airport
           </Typography>
 
-          {/* Error Message */}
-          {errorMessage && (
-            <Typography color="error" variant="body1" gutterBottom>
-              {errorMessage}
-            </Typography>
-          )}
-
           <form onSubmit={handleSubmit}>
             {step === 1 && (
               <Grid container spacing={4}>
+                <Grid item xs={12}>
+                  <Box
+                    ref={mapContainer}
+                    style={{ height: "400px", width: "100%" }}
+                  />
+                </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    id="name"
                     name="name"
                     label="Airport Name"
                     value={airport.name}
                     onChange={handleInputChange}
                     required
                     fullWidth
+                    InputProps={{ readOnly: true }}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    id="code"
                     name="code"
                     label="Airport Code"
                     value={airport.code}
@@ -121,139 +237,131 @@ const AddAirport = () => {
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    id="city"
                     name="city"
                     label="City"
                     value={airport.city}
                     onChange={handleInputChange}
                     required
                     fullWidth
+                    InputProps={{ readOnly: true }}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    id="country"
                     name="country"
                     label="Country"
                     value={airport.country}
                     onChange={handleInputChange}
                     required
                     fullWidth
+                    InputProps={{ readOnly: true }}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    id="latitude"
                     name="latitude"
                     label="Latitude"
                     type="number"
-                    step="any"
                     value={airport.latitude}
                     onChange={handleInputChange}
                     required
                     fullWidth
+                    InputProps={{ readOnly: true }}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    id="longitude"
                     name="longitude"
                     label="Longitude"
                     type="number"
-                    step="any"
                     value={airport.longitude}
                     onChange={handleInputChange}
                     required
                     fullWidth
+                    InputProps={{ readOnly: true }}
                   />
                 </Grid>
               </Grid>
             )}
 
             {step === 2 && (
-              <Box>
-                <Typography variant="h5" gutterBottom>
-                  Terminals
-                </Typography>
-                {airport.terminals.map((terminal, tIndex) => (
-                  <Box
-                    key={tIndex}
-                    mb={4}
-                    p={2}
-                    border={1}
-                    borderColor="grey.300"
-                    borderRadius={2}
-                  >
+              <Grid container spacing={4}>
+                {airport.terminals.map((terminal, index) => (
+                  <Grid item xs={12} key={index}>
                     <TextField
-                      id={`terminal-${tIndex}`}
-                      label="Terminal Name"
+                      name={`terminal-${index}`}
+                      label={`Terminal ${index + 1} Name`}
                       value={terminal.terminalName}
                       onChange={(e) =>
-                        handleTerminalChange(tIndex, e.target.value)
+                        handleTerminalChange(index, e.target.value)
                       }
+                      required
                       fullWidth
-                      margin="normal"
                     />
-                    <Typography variant="subtitle1" gutterBottom>
-                      Gates
-                    </Typography>
-                    {terminal.gates.map((gate, gIndex) => (
+                    {terminal.gates.map((gate, gateIndex) => (
                       <TextField
-                        key={gIndex}
-                        label="Gate Number"
+                        key={gateIndex}
+                        name={`gate-${index}-${gateIndex}`}
+                        label={`Gate ${gateIndex + 1} Number`}
                         value={gate.gateNumber}
                         onChange={(e) =>
-                          handleGateChange(tIndex, gIndex, e.target.value)
+                          handleGateChange(index, gateIndex, e.target.value)
                         }
+                        required
                         fullWidth
-                        margin="dense"
+                        sx={{ mt: 2 }}
                       />
                     ))}
                     <Button
-                      onClick={() => handleAddGate(tIndex)}
                       variant="outlined"
-                      color="primary"
-                      size="small"
                       sx={{ mt: 2 }}
+                      onClick={() => handleAddGate(index)}
                     >
                       Add Gate
                     </Button>
-                  </Box>
+                  </Grid>
                 ))}
-                <Button
-                  onClick={handleAddTerminal}
-                  variant="contained"
-                  color="primary"
-                >
-                  Add Terminal
-                </Button>
-              </Box>
+                <Grid item xs={12}>
+                  <Button variant="contained" onClick={handleAddTerminal}>
+                    Add Terminal
+                  </Button>
+                </Grid>
+              </Grid>
             )}
 
-            {/* Multi-Step Navigation */}
-            <Box display="flex" justifyContent="space-between" mt={4}>
+            <Box mt={4}>
               {step > 1 && (
-                <Button onClick={prevStep} variant="outlined">
-                  Back
+                <Button variant="contained" onClick={prevStep}>
+                  Previous
                 </Button>
               )}
-              {step < 2 && (
-                <Button onClick={nextStep} variant="contained" color="primary">
-                  Next
-                </Button>
-              )}
-              {step === 2 && (
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="success"
-                  disabled={loading}
-                >
-                  {loading ? "Creating..." : "Create Airport"}
-                </Button>
-              )}
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={nextStep}
+                sx={{ ml: 2 }}
+                disabled={loading}
+              >
+                {step === 1 ? "Next" : "Submit"}
+              </Button>
             </Box>
           </form>
+
+          {/* Snackbar for error messages */}
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={6000}
+            onClose={handleSnackbarClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <Alert
+              onClose={handleSnackbarClose}
+              severity="error"
+              sx={{ width: "100%" }}
+            >
+              {errorMessage}
+            </Alert>
+          </Snackbar>
         </Paper>
       </Box>
     </AdminLayout>

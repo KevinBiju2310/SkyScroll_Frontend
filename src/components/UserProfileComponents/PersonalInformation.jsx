@@ -1,16 +1,34 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux"; // to access the store
 import { Save } from "lucide-react";
-import { TextField, Button, Grid, Typography, Box, Paper } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Grid,
+  Typography,
+  Box,
+  Paper,
+  Alert,
+  Snackbar,
+} from "@mui/material";
 import axiosInstance from "../../utils/axiosInstance";
+// import { setUser } from "../../redux/userSlice";
 
 const PersonalInformation = () => {
+  // Get the user data from the Redux store
+  const user = useSelector((state) => state.user.user);
+  // const dispatch = useDispatch();
+
+  // Initial state for personal information, populated from the Redux store
   const [personalInfo, setPersonalInfo] = useState({
     email: "",
     username: "",
     phone: "",
-    dateOfBirth: "",
   });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  // const [passportSnackbar, setPassportSnackbar] = useState(false);
 
+  // You can keep the passport details separate if needed later
   const [passportDetails, setPassportDetails] = useState({
     firstName: "",
     lastName: "",
@@ -20,24 +38,16 @@ const PersonalInformation = () => {
     expiryDate: "",
   });
 
+  // Remove the API call inside useEffect
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get("/profile");
-        const data = response.data.data;
-        // console.log(data.email);
-        setPersonalInfo({
-          email: data.email || "",
-          username: data.username || "",
-          phone: data.phone || "",
-          dateOfBirth: data.dateOfBirth || "",
-        });
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchData();
-  }, []);
+    if (user) {
+      setPersonalInfo({
+        email: user.email || "",
+        username: user.username || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user]);
 
   const handlePersonalInfoChange = (e) => {
     setPersonalInfo({ ...personalInfo, [e.target.name]: e.target.value });
@@ -49,18 +59,21 @@ const PersonalInformation = () => {
 
   const handlePersonalInfoSubmit = async (e) => {
     e.preventDefault();
+    const data = {
+      ...personalInfo,
+      passportDetails: { ...passportDetails },
+    };
     try {
-      const response = await axiosInstance.put("/profile", personalInfo);
+      const response = await axiosInstance.put("/profile", data);
       console.log("Personal info updated:", response.data);
+      setSnackbarOpen(true);
     } catch (error) {
       console.error("Error updating personal info:", error);
     }
-    console.log("Saving personal info:", personalInfo);
   };
 
-  const handlePassportDetailsSubmit = (e) => {
-    e.preventDefault();
-    console.log("Saving passport details:", passportDetails);
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -105,23 +118,10 @@ const PersonalInformation = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Phone Number"
-                name="phoneNumber"
-                value={personalInfo.phoneNumber}
+                name="phone"
+                value={personalInfo.phone}
                 onChange={handlePersonalInfoChange}
                 fullWidth
-                variant="outlined"
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Date of Birth"
-                name="dateOfBirth"
-                type="date"
-                value={personalInfo.dateOfBirth}
-                onChange={handlePersonalInfoChange}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
                 variant="outlined"
                 size="small"
               />
@@ -131,6 +131,21 @@ const PersonalInformation = () => {
             <SaveButton />
           </Box>
         </form>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={2000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          sx={{ top: 100 }}
+        >
+          <Alert
+            onClose={handleSnackbarClose}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            Saved Successfully!
+          </Alert>
+        </Snackbar>
 
         <Box sx={{ mt: 5, pt: 3, borderTop: 1, borderColor: "divider" }}>
           <Typography
@@ -145,7 +160,7 @@ const PersonalInformation = () => {
             Please enter your passport details below.
           </Typography>
 
-          <form onSubmit={handlePassportDetailsSubmit}>
+          <form onSubmit={handlePersonalInfoSubmit}>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -228,6 +243,7 @@ const PersonalInformation = () => {
   );
 };
 
+// SaveButton Component
 const SaveButton = () => (
   <Button
     type="submit"
