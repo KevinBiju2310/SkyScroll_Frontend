@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import background from "../../assets/background.jpg";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
+import { Snackbar, Alert } from "@mui/material";
 
 const RegistrationForm = () => {
   const [step, setStep] = useState(1);
@@ -18,6 +19,11 @@ const RegistrationForm = () => {
     insuranceCertificate: null,
   });
   const [errors, setErrors] = useState({});
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -37,6 +43,13 @@ const RegistrationForm = () => {
     }
   };
   const prevStep = () => setStep(step - 1);
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const validateStep = (step) => {
     let newErrors = {};
@@ -125,8 +138,14 @@ const RegistrationForm = () => {
       );
 
       console.log("Registration successful:", response);
-      // Navigate to another page or show success message
-      // navigate("/success");
+      setSnackbar({
+        open: true,
+        message: "Registration successful! Redirecting to login page...",
+        severity: "success",
+      });
+      setTimeout(() => {
+        navigate("/airline/");
+      }, 3000);
     } catch (error) {
       console.error("Error submitting form:", error);
     }
@@ -407,6 +426,20 @@ const RegistrationForm = () => {
           </button>
         </p>
       </div>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

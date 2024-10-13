@@ -3,11 +3,14 @@ import background from "../../assets/background.jpg";
 import { useNavigate } from "react-router-dom";
 import { Snackbar } from "@mui/material";
 import axiosInstance from "../../utils/axiosInstance";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../redux/userSlice";
 
 const LogIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -16,7 +19,6 @@ const LogIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     // Ensure all fields are filled
     if (!email || !password) {
       setSnackbar({
@@ -26,34 +28,32 @@ const LogIn = () => {
       });
       return;
     }
-
     try {
       // Sending login request to the backend
       const response = await axiosInstance.post("/airline/login", {
         email,
         password,
       });
-
       // Assuming login is successful and you handle the next steps like redirecting
       console.log(response);
+      dispatch(setUser(response.data.response));
       setSnackbar({
         open: true,
         message: "Login Successful",
-        isError: false,  // Not an error, hence false
+        isError: false, // Not an error, hence false
       });
-
-      // Navigate to another page on success, e.g., dashboard
-      // navigate('/dashboard');
-      
+      navigate("/airline/dashboard");
     } catch (error) {
       // Handling error response from the backend
-      const errorMessage = error?.response?.data?.error || "Error Occurred, please try again later";
+      const errorMessage =
+        error?.response?.data?.error ||
+        "Error Occurred, please try again later";
 
       // Show the error message in the snackbar
       setSnackbar({
         open: true,
         message: errorMessage, // Set the error message from the backend
-        isError: true,          // Error flag to set color to red
+        isError: true, // Error flag to set color to red
       });
     }
   };
@@ -69,8 +69,8 @@ const LogIn = () => {
         {/* Snackbar component to display messages */}
         <Snackbar
           open={snackbar.open}
-          autoHideDuration={3000}  // Show message for 3 seconds
-          onClose={() => setSnackbar({ ...snackbar, open: false })}  // Close snackbar
+          autoHideDuration={3000} // Show message for 3 seconds
+          onClose={() => setSnackbar({ ...snackbar, open: false })} // Close snackbar
           message={snackbar.message}
           anchorOrigin={{ vertical: "top", horizontal: "right" }}
           ContentProps={{
