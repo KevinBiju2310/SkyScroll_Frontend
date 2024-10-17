@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
 import { useNavigate } from "react-router-dom";
 import { Plane, X, Edit, Trash2 } from "lucide-react";
-import axiosInstance from "../../utils/axiosInstance";
+import axiosInstance from "../../config/axiosInstance";
 import {
   MapContainer,
   TileLayer,

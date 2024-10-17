@@ -10,14 +10,13 @@ import {
   Paper,
   Snackbar,
   Alert,
-} from "@mui/material"; // Import Snackbar and Alert
-import axiosInstance from "../../utils/axiosInstance";
+} from "@mui/material";
+import axiosInstance from "../../config/axiosInstance";
 import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-// Replace with your Mapbox access token
 mapboxgl.accessToken =
   "pk.eyJ1Ijoic2t5c2Nyb2xsIiwiYSI6ImNtMjdmcDVsdjBua3kybHM2Yjg5eHFjZW8ifQ.DDjEvia0H06UVd5hFCzGPw";
 
@@ -88,13 +87,11 @@ const AddAirport = () => {
     return () => map.current.remove();
   }, []);
 
-  // Handle input change for form fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setAirport((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add a terminal
   const handleAddTerminal = () => {
     setAirport((prev) => ({
       ...prev,
@@ -102,7 +99,6 @@ const AddAirport = () => {
     }));
   };
 
-  // Handle terminal input change
   const handleTerminalChange = (index, value) => {
     const newTerminals = [...airport.terminals];
     newTerminals[index].terminalName = value;
@@ -116,14 +112,12 @@ const AddAirport = () => {
     setAirport((prev) => ({ ...prev, terminals: newTerminals }));
   };
 
-  // Handle gate input change
   const handleGateChange = (terminalIndex, gateIndex, value) => {
     const newTerminals = [...airport.terminals];
     newTerminals[terminalIndex].gates[gateIndex].gateNumber = value;
     setAirport((prev) => ({ ...prev, terminals: newTerminals }));
   };
 
-  // Validation function for Step 1
   const validateStep1 = () => {
     const { name, city, country, latitude, longitude, code } = airport;
 
@@ -142,7 +136,6 @@ const AddAirport = () => {
     return true;
   };
 
-  // Validation function for Step 2 (Terminals and Gates)
   const validateStep2 = () => {
     for (let terminal of airport.terminals) {
       if (!terminal.terminalName) {
@@ -181,7 +174,6 @@ const AddAirport = () => {
     }
   };
 
-  // Move to the next step with validation
   const nextStep = () => {
     if (step === 1 && validateStep1()) {
       setStep(2);
@@ -192,7 +184,6 @@ const AddAirport = () => {
 
   const prevStep = () => setStep(step - 1);
 
-  // Handle Snackbar close
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
@@ -347,7 +338,6 @@ const AddAirport = () => {
             </Box>
           </form>
 
-          {/* Snackbar for error messages */}
           <Snackbar
             open={snackbarOpen}
             autoHideDuration={6000}

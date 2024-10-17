@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import { TextField, Button, Box, Typography, Snackbar } from "@mui/material";
-import axiosInstance from "../utils/axiosInstance"; // Ensure axiosInstance is correctly set up
+import axiosInstance from "../config/axiosInstance";
 
-const OtpForm = ({ userId }) => {
+const OtpForm = ({ userId, onOtpSuccess }) => {
   const [otp, setOtp] = useState("");
-  const [timer, setTimer] = useState(60); // Start with 60 seconds
+  const [timer, setTimer] = useState(60);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     isError: false,
   });
 
-  // Start the timer when the component mounts
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
@@ -44,7 +43,7 @@ const OtpForm = ({ userId }) => {
         message: "OTP verified successfully!",
         isError: false,
       });
-      // Handle successful OTP verification (e.g., redirect user)
+      onOtpSuccess();
     } catch (error) {
       setSnackbar({
         open: true,
@@ -55,7 +54,7 @@ const OtpForm = ({ userId }) => {
   };
 
   const handleResendOtp = async () => {
-    setTimer(60); // Reset the timer to 60 seconds
+    setTimer(60);
     try {
       const response = await axiosInstance.post("/resend-otp", { userId });
       setSnackbar({
@@ -94,7 +93,7 @@ const OtpForm = ({ userId }) => {
           size="large"
           fullWidth
           sx={{ mt: 2 }}
-          disabled={timer <= 0} // Disable the button if the timer has run out
+          disabled={timer <= 0}
         >
           Verify OTP
         </Button>

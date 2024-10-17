@@ -12,11 +12,10 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { setUser } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../utils/axiosInstance";
+import axiosInstance from "../config/axiosInstance";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
-const client_id =
-  "1084384237911-tts03h5ai0d2p0alrj03283s7hainnqs.apps.googleusercontent.com";
+const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 // console.log(client_id);
 
 const LoginForm = ({ onSwitchToRegister, onClose }) => {
@@ -24,6 +23,7 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
     email: "",
     password: "",
   });
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -37,6 +37,7 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -122,6 +123,46 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
       });
     }
   };
+
+  const handleForgotPasswordSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.email) {
+      setSnackbar({
+        open: true,
+        message: "Please enter your email address.",
+        isError: true,
+      });
+      return false;
+    }
+
+    if (!isValidEmail(formData.email)) {
+      setSnackbar({
+        open: true,
+        message: "Please enter a valid email address.",
+        isError: true,
+      });
+      return false;
+    }
+    try {
+      const email = formData.email;
+      await axiosInstance.post("/forgot-password", { email });
+      setSnackbar({
+        open: true,
+        message: "Password reset link sent! Check your email.",
+        isError: false,
+      });
+      setIsForgotPassword(false); 
+    } catch (error) {
+      console.log(error);
+      setSnackbar({
+        open: true,
+        message: "Error sending password reset link.",
+        isError: true,
+      });
+    }
+  };
+
   return (
     <GoogleOAuthProvider clientId={client_id}>
       <Box display="flex">
@@ -140,16 +181,18 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
           justifyContent="center"
         >
           <Typography
-            variant="h4"
+            variant="h5"
             fontWeight="bold"
             align="center"
             gutterBottom
           >
-            Login
+            {isForgotPassword ? "Forgot Password" : "Login"}
           </Typography>
           <Box
             component="form"
-            onSubmit={handleSubmit}
+            onSubmit={
+              isForgotPassword ? handleForgotPasswordSubmit : handleSubmit
+            }
             display="flex"
             flexDirection="column"
             gap={3}
@@ -169,49 +212,83 @@ const LoginForm = ({ onSwitchToRegister, onClose }) => {
                 ),
               }}
             />
-            <TextField
-              name="password"
-              label="Password"
-              variant="outlined"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              fullWidth
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LockIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
+
+            {/* Show password field only if it's login form */}
+            {!isForgotPassword && (
+              <TextField
+                name="password"
+                label="Password"
+                variant="outlined"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+            {!isForgotPassword && (
+              <Typography
+                variant="body2"
+                align="right"
+                sx={{ cursor: "pointer" }}
+                color="primary"
+                onClick={() => setIsForgotPassword(true)}
+              >
+                Forgot Password?
+              </Typography>
+            )}
             <Button
               variant="contained"
               color="primary"
               type="submit"
               size="large"
               fullWidth
-              sx={{ mt: 2 }}
             >
-              Login
+              {isForgotPassword ? "Reset Password" : "Login"}
             </Button>
-            <GoogleLogin
-              onSuccess={handleGoogleLoginSuccess}
-              onError={() =>
-                setSnackbar({
-                  open: true,
-                  message: "Google login failed!",
-                  isError: true,
-                })
-              }
-            />
+
+            {/* Conditionally render Forgot Password button */}
+            {!isForgotPassword && (
+              <GoogleLogin
+                onSuccess={handleGoogleLoginSuccess}
+                onError={() =>
+                  setSnackbar({
+                    open: true,
+                    message: "Google login failed!",
+                    isError: true,
+                  })
+                }
+              />
+            )}
           </Box>
-          <Typography align="center" mt={3}>
-            Don{"'"}t have an account?{" "}
-            <Button onClick={onSwitchToRegister} color="primary">
-              Register
-            </Button>
-          </Typography>
+
+          {!isForgotPassword && (
+            <Typography align="center" mt={3}>
+              Don{"'"}t have an account?{" "}
+              <Button onClick={onSwitchToRegister} color="primary">
+                Register
+              </Button>
+            </Typography>
+          )}
+
+          {/* Button to switch back to login form from forgot password form */}
+          {isForgotPassword && (
+            <Typography
+              align="center"
+              variant="body2"
+              sx={{ cursor: "pointer", mt: 2 }}
+              color="primary"
+              onClick={() => setIsForgotPassword(false)}
+            >
+              Back to Login
+            </Typography>
+          )}
         </Box>
         <Snackbar
           open={snackbar.open}

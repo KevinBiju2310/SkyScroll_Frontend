@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance";
+import axiosInstance from "../../config/axiosInstance";
 import Map, { Marker } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css"; // Import Mapbox styles
 import { AdminLayout } from "../../components/AdminLayout";
 
 const MAPBOX_TOKEN =
-  "";
+  "pk.eyJ1Ijoic2t5c2Nyb2xsIiwiYSI6ImNtMjdmcDVsdjBua3kybHM2Yjg5eHFjZW8ifQ.DDjEvia0H06UVd5hFCzGPw";
 
 const UpdateAirport = () => {
   const { id } = useParams();

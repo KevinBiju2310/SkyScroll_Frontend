@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import background from "../../assets/background.jpg";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance";
+import axiosInstance from "../../config/axiosInstance";
 import { Snackbar, Alert } from "@mui/material";
 
 const RegistrationForm = () => {

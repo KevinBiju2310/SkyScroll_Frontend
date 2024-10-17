@@ -4,6 +4,7 @@ import ProtectedRoute from "../ProtectedRoute/ProtectedRoute";
 
 const Home = React.lazy(() => import("../pages/HomePage"));
 const Profile = React.lazy(() => import("../pages/ProfilePage"));
+const ResetPassword = React.lazy(() => import("../pages/ResetPassword"));
 
 const UserRoutes = () => {
   return (
@@ -13,6 +14,7 @@ const UserRoutes = () => {
         <Route element={<ProtectedRoute userOnly />}>
           <Route path="profile" element={<Profile />} />
         </Route>
+        <Route path="reset-password" element={<ResetPassword />} />
       </Routes>
     </Suspense>
   );

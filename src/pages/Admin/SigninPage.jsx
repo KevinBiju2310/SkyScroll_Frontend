@@ -16,7 +16,7 @@ import { Visibility, VisibilityOff, Login } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../redux/userSlice";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance";
+import axiosInstance from "../../config/axiosInstance";
 
 const AdminSignIn = () => {
   const [email, setEmail] = useState("");

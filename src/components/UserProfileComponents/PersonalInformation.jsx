@@ -11,7 +11,7 @@ import {
   Alert,
   Snackbar,
 } from "@mui/material";
-import axiosInstance from "../../utils/axiosInstance";
+import axiosInstance from "../../config/axiosInstance";
 // import { setUser } from "../../redux/userSlice";
 
 const PersonalInformation = () => {

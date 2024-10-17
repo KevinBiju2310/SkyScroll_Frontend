@@ -10,7 +10,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import { useState } from "react";
-import axiosInstance from "../utils/axiosInstance";
+import axiosInstance from "../config/axiosInstance";
 import OtpForm from "./OtpForm";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
@@ -131,6 +131,11 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     }
   };
 
+  const handleOtpSuccess = () => {
+    setShowOtpForm(false);
+    onSwitchToLogin(); // Switch to the login form
+  };
+
   return (
     <Box display="flex">
       <Box flex={1}>
@@ -148,7 +153,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
         justifyContent="center"
       >
         {showOtpForm ? (
-          <OtpForm userId={userId} />
+          <OtpForm userId={userId} onOtpSuccess={handleOtpSuccess} />
         ) : (
           <>
             <Typography
@@ -263,7 +268,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
       </Box>
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={800}
+        autoHideDuration={8000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         message={snackbar.message}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}

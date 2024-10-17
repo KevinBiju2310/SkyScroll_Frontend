@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
 import ConfirmationModal from "../../components/ConfirmationModal";
-import axiosInstance from "../../utils/axiosInstance";
+import axiosInstance from "../../config/axiosInstance";
 import Pagination from "../../components/Pagination";
 
 const Users = () => {
