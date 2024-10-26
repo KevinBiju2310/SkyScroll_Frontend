@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux"; // to access the store
+import { useDispatch, useSelector } from "react-redux";
 import { Save } from "lucide-react";
 import {
   TextField,
@@ -12,23 +12,17 @@ import {
   Snackbar,
 } from "@mui/material";
 import axiosInstance from "../../config/axiosInstance";
-// import { setUser } from "../../redux/userSlice";
+import { updateUserProfile } from "../../redux/userSlice";
 
 const PersonalInformation = () => {
-  // Get the user data from the Redux store
   const user = useSelector((state) => state.user.user);
-  // const dispatch = useDispatch();
-
-  // Initial state for personal information, populated from the Redux store
+  const dispatch = useDispatch();
   const [personalInfo, setPersonalInfo] = useState({
     email: "",
     username: "",
     phone: "",
   });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  // const [passportSnackbar, setPassportSnackbar] = useState(false);
-
-  // You can keep the passport details separate if needed later
   const [passportDetails, setPassportDetails] = useState({
     firstName: "",
     lastName: "",
@@ -38,13 +32,23 @@ const PersonalInformation = () => {
     expiryDate: "",
   });
 
-  // Remove the API call inside useEffect
   useEffect(() => {
     if (user) {
       setPersonalInfo({
         email: user.email || "",
         username: user.username || "",
         phone: user.phone || "",
+      });
+    }
+
+    if (user.passportDetails) {
+      setPassportDetails({
+        firstName: user.passportDetails.firstName || "",
+        lastName: user.passportDetails.lastName || "",
+        dateOfBirth: user.passportDetails.dateOfBirth || "",
+        nationality: user.passportDetails.nationality || "",
+        passportNumber: user.passportDetails.passportNumber || "",
+        expiryDate: user.passportDetails.expiryDate || "",
       });
     }
   }, [user]);
@@ -61,14 +65,27 @@ const PersonalInformation = () => {
     e.preventDefault();
     const data = {
       ...personalInfo,
-      passportDetails: { ...passportDetails },
     };
     try {
       const response = await axiosInstance.put("/profile", data);
-      console.log("Personal info updated:", response.data);
+      console.log("Personal info updated:", response.data.data);
+      dispatch(updateUserProfile(response.data.data));
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Error updating personal info:", error);
+    }
+  };
+
+  const handlePassportDetailsSubmit = async (e) => {
+    e.preventDefault();
+    const data = {
+      ...passportDetails,
+    };
+    try {
+      const response = await axiosInstance.put("/passport", data);
+      console.log("Passport info updated: ", response);
+    } catch (error) {
+      console.error("Error updating passport details:", error);
     }
   };
 
@@ -160,7 +177,7 @@ const PersonalInformation = () => {
             Please enter your passport details below.
           </Typography>
 
-          <form onSubmit={handlePersonalInfoSubmit}>
+          <form onSubmit={handlePassportDetailsSubmit}>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
                 <TextField

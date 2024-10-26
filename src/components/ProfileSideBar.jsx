@@ -20,8 +20,6 @@ const sidebarItems = [
 // Wrapper component for consistent positioning
 const SidebarWrapper = ({ children }) => (
   <div className="left-4 mt-32 ml-10 h-auto">
-    {" "}
-    {/* Increased mt-10 to mt-16 */}
     {children}
   </div>
 );

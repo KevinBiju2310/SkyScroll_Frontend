@@ -12,12 +12,16 @@ const userSlice = createSlice({
       console.log("Dispatching user:", action.payload);
       state.user = action.payload;
     },
+    updateUserProfile: (state, action) => {
+      console.log("Updating user profile:", action.payload);
+      state.user = action.payload;
+    },
     logout: (state) => {
-      state.user = null;  
+      state.user = null;
     },
   },
 });
 
-export const { setUser, logout } = userSlice.actions;
+export const { setUser, logout, updateUserProfile } = userSlice.actions;
 
 export default userSlice.reducer;

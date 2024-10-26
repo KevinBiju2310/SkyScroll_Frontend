@@ -1,4 +1,3 @@
-// import React from 'react';
 import AirlineLayout from "../../components/AirlineSidebar";
 
 const App = () => {

@@ -109,13 +109,14 @@ const RegisterForm = ({ onSwitchToLogin }) => {
         password: formData.password,
       });
       const userId = response.data.data._id;
+      console.log(userId);
       setUserId(userId);
       setSnackbar({
         open: true,
         message: "Registration successful! Please verify your OTP.",
         isError: false,
       });
-      setShowOtpForm(true); // Show the OTP form after successful registration
+      setShowOtpForm(true);
       setFormData({
         username: "",
         email: "",
