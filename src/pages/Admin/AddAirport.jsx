@@ -16,9 +16,12 @@ import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import "mapbox-gl/dist/mapbox-gl.css";
+import axios from "axios";
 
 mapboxgl.accessToken =
   "pk.eyJ1Ijoic2t5c2Nyb2xsIiwiYSI6ImNtMjdmcDVsdjBua3kybHM2Yjg5eHFjZW8ifQ.DDjEvia0H06UVd5hFCzGPw";
+
+const TIMEZONE_API_KEY = "HQ96ADMXAA8Q"; // Replace with your TimeZoneDB API key
 
 const AddAirport = () => {
   const navigate = useNavigate();
@@ -30,6 +33,7 @@ const AddAirport = () => {
     country: "",
     latitude: "",
     longitude: "",
+    timezone: "",
     terminals: [],
   });
   const [errorMessage, setErrorMessage] = useState("");
@@ -39,6 +43,24 @@ const AddAirport = () => {
   const map = useRef(null);
   const geocoder = useRef(null);
 
+  const fetchTimeZone = async (lat, lng) => {
+    try {
+      const response = await axios.get(
+        `http://api.timezonedb.com/v2.1/get-time-zone?key=${TIMEZONE_API_KEY}&format=json&by=position&lat=${lat}&lng=${lng}`
+      );
+
+      const { zoneName } = response.data; // Extract timezone
+
+      setAirport((prev) => ({
+        ...prev,
+        timezone: zoneName, // Set the timezone in state
+      }));
+    } catch (error) {
+      console.error("Error fetching timezone:", error);
+      setErrorMessage("Could not fetch timezone. Please try again.");
+      setSnackbarOpen(true);
+    }
+  };
   // Mapbox Initialization
   useEffect(() => {
     if (map.current) return;
@@ -76,6 +98,7 @@ const AddAirport = () => {
         latitude: lat.toFixed(6),
         longitude: lng.toFixed(6),
       }));
+      fetchTimeZone(lat, lng);
 
       new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map.current);
       map.current.flyTo({
@@ -86,6 +109,8 @@ const AddAirport = () => {
 
     return () => map.current.remove();
   }, []);
+
+  // Function to fetch time zone based on latitude and longitude
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -268,6 +293,15 @@ const AddAirport = () => {
                     value={airport.longitude}
                     onChange={handleInputChange}
                     required
+                    fullWidth
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    name="timezone"
+                    label="Time Zone"
+                    value={airport.timezone}
                     fullWidth
                     InputProps={{ readOnly: true }}
                   />

@@ -10,7 +10,7 @@ import {
   Popup as LeafletPopup,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import ConfirmationModal from "../../components/ConfirmationModal"; // Assuming this is the path to your ConfirmationModal
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const Airports = () => {
   const [airports, setAirports] = useState([]);

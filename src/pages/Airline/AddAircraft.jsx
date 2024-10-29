@@ -20,6 +20,7 @@ import { styled } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axiosInstance from "../../config/axiosInstance";
+import { useNavigate } from "react-router-dom";
 
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
@@ -34,6 +35,7 @@ const VisuallyHiddenInput = styled("input")`
 `;
 
 const AddAircraft = () => {
+  const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [certificateFile, setCertificateFile] = useState(null);
   const [formData, setFormData] = useState({
@@ -118,7 +120,7 @@ const AddAircraft = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData)
+    console.log(formData);
     const submitData = new FormData();
 
     Object.keys(formData).forEach((key) => {
@@ -132,19 +134,20 @@ const AddAircraft = () => {
     });
 
     try {
-      const response = await axiosInstance.post("/airline/add-aircraft", submitData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axiosInstance.post(
+        "/airline/add-aircraft",
+        submitData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       console.log(response);
+      navigate("/airline/aircrafts")
     } catch (error) {
       console.error("Error submitting form", error);
     }
-    // console.log("Form Data to submit:", submitData);
-    // for (let [key, value] of submitData.entries()) {
-    //   console.log(`${key}: ${value}`);
-    // }
   };
 
   const renderBasicDetails = () => (

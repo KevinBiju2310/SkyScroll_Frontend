@@ -24,7 +24,7 @@ const LayoutComponent = ({ children }) => {
     { icon: Plane, label: "Aircrafts", path: "/airline/aircrafts" },
     { icon: Calendar, label: "Bookings" },
     { icon: MessageSquare, label: "Messages" },
-    { icon: Map, label: "Trip Details" },
+    { icon: Map, label: "Trip Details", path: "/airline/trips" }, 
     { icon: User, label: "Profile", path: "/airline/profile" },
   ];
 
