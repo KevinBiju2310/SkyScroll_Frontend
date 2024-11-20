@@ -22,6 +22,7 @@ import { updateUserProfile } from "../../redux/userSlice";
 const Profile = () => {
   const airline = useSelector((state) => state.user.user);
   const dispatch = useDispatch();
+
   const [profile, setProfile] = useState({
     username: airline.username,
     email: airline.email,
@@ -30,6 +31,7 @@ const Profile = () => {
     designation: airline.designation,
     licenseDocument: airline.licenseDocument,
     insuranceDocument: airline.insuranceDocument,
+    logoUrl: airline.logoUrl || "", // Initialize logo URL
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -52,6 +54,37 @@ const Profile = () => {
     setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
   };
 
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append("logo", file);
+
+    try {
+      const response = await axiosInstance.post(
+        "/airline/upload-logo",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setProfile((prev) => ({ ...prev, logoUrl: response.data.url }));
+      setSnackbar({
+        open: true,
+        message: "Logo uploaded successfully!",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to upload logo.",
+        severity: "error",
+      });
+    }
+  };
+
   const handleSubmitProfile = async (e) => {
     e.preventDefault();
     const profileDataToSend = {
@@ -60,13 +93,13 @@ const Profile = () => {
       phone: profile.phone,
       airlineName: profile.airlineName,
       designation: profile.designation,
+      logoUrl: profile.logoUrl,
     };
     try {
       const response = await axiosInstance.put(
         "/airline/profile",
         profileDataToSend
       );
-      console.log("Profile updated:", response);
       dispatch(updateUserProfile(response.data.data));
       setSnackbar({
         open: true,
@@ -88,7 +121,7 @@ const Profile = () => {
     if (
       !passwordForm.currentPassword ||
       !passwordForm.newPassword ||
-      !passwordForm.currentPassword
+      !passwordForm.confirmNewPassword
     ) {
       setSnackbar({
         open: true,
@@ -198,6 +231,21 @@ const Profile = () => {
                             }
                           />
                         </Box>
+                      </Grid>
+                    );
+                  }
+                  if (key === "logoUrl") {
+                    return (
+                      <Grid item xs={12} key={key}>
+                        <Typography>Upload Airline Logo</Typography>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                        />
+                        {value && (
+                          <img src={value} alt="Airline Logo" width="100" />
+                        )}
                       </Grid>
                     );
                   }

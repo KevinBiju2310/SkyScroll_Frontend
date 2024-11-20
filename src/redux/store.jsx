@@ -2,6 +2,7 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // Local storage for persistence
 import userReducer from "./userSlice";
+import bookingReducer from "./bookingSlice";
 
 const persistConfig = {
   key: "root",
@@ -10,7 +11,8 @@ const persistConfig = {
 };
 
 const rootReducer = combineReducers({
-  user: userReducer, // User reducer
+  user: userReducer,
+  bookings: bookingReducer,
 });
 
 // Apply persistReducer to only the user part of the root reducer

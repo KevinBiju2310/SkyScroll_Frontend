@@ -3,16 +3,21 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../config/axiosInstance";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import Popup from "../../components/PopUp";
 
 const Aircraft = () => {
   const [aircrafts, setAircrafts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
   const [aircraftIdToDelete, setAircraftIdToDelete] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup state
+  const [selectedAircraft, setSelectedAircraft] = useState(null);
   const navigate = useNavigate();
 
-  // const handleView = (id) => {
-  //   console.log(`Viewing aircraft with id: ${id}`);
-  // };
+  const handleView = (id) => {
+    const aircraft = aircrafts.find((a) => a._id === id);
+    setSelectedAircraft(aircraft);
+    setIsPopupOpen(true);
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -32,6 +37,10 @@ const Aircraft = () => {
     navigate("/airline/aircrafts/addaircraft");
   };
 
+  const handleUpdate = (id) => {
+    navigate(`/airline/aircrafts/updateaircraft/${id}`);
+  };
+
   const confirmDelete = (id) => {
     setAircraftIdToDelete(id); // Set the aircraft ID to be deleted
     setIsModalOpen(true); // Open the confirmation modal
@@ -47,6 +56,11 @@ const Aircraft = () => {
   const handleCancel = () => {
     setAircraftIdToDelete(null); // Reset the selected ID
     setIsModalOpen(false); // Close the modal
+  };
+
+  const handlePopupClose = () => {
+    setIsPopupOpen(false);
+    setSelectedAircraft(null);
   };
 
   useEffect(() => {
@@ -128,12 +142,12 @@ const Aircraft = () => {
                     {aircraft.approvalStatus}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {/* <button
+                    <button
                       className="text-blue-600 hover:text-blue-900 mr-4"
-                      onClick={() => handleView(aircraft.id)}
+                      onClick={() => handleView(aircraft._id)}
                     >
                       View
-                    </button> */}
+                    </button>
                     <button
                       className="text-red-600 hover:text-red-900"
                       onClick={() => confirmDelete(aircraft._id)}
@@ -153,6 +167,85 @@ const Aircraft = () => {
         onCancel={handleCancel}
         message="Are you sure you want to delete this aircraft?"
       />
+      <Popup isOpen={isPopupOpen} onClose={handlePopupClose}>
+        {selectedAircraft && (
+          <div className="bg-gray-50 p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-blue-600 mb-6 border-b pb-2">
+              Aircraft Details
+            </h2>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex flex-col space-y-1">
+                <span className="text-gray-600 font-bold">Model:</span>
+                <span className="text-gray-800">
+                  {selectedAircraft.aircraftModel}
+                </span>
+              </div>
+
+              <div className="flex flex-col space-y-1">
+                <span className="text-gray-600 font-bold">Registration:</span>
+                <span className="text-gray-800">
+                  {selectedAircraft.registrationNumber}
+                </span>
+              </div>
+
+              <div className="flex flex-col space-y-1">
+                <span className="text-gray-600 font-bold">
+                  Last Maintenance:
+                </span>
+                <span className="text-gray-800">
+                  {new Date(
+                    selectedAircraft.lastMaintenanceDate
+                  ).toLocaleDateString()}
+                </span>
+              </div>
+
+              <div className="flex flex-col space-y-1">
+                <span className="text-gray-600 font-bold">
+                  Next Maintenance:
+                </span>
+                <span className="text-gray-800">
+                  {new Date(
+                    selectedAircraft.nextMaintenanceDate
+                  ).toLocaleDateString()}
+                </span>
+              </div>
+
+              <div className="flex flex-col space-y-1">
+                <span className="text-gray-600 font-bold">
+                  Engine Manufacturer:
+                </span>
+                <span className="text-gray-800">
+                  {selectedAircraft.engineManufacturer}
+                </span>
+              </div>
+
+              <div className="flex flex-col space-y-1">
+                <span className="text-gray-600 font-bold">
+                  Approval Status:
+                </span>
+                <span
+                  className={`font-semibold ${
+                    selectedAircraft.approvalStatus === "Approved"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {selectedAircraft.approvalStatus}
+                </span>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition"
+                onClick={() => handleUpdate(selectedAircraft._id)}
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        )}
+      </Popup>
     </AirlineLayout>
   );
 };

@@ -38,6 +38,7 @@ const AddAircraft = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [certificateFile, setCertificateFile] = useState(null);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     aircraftModel: "",
     manufacturer: "",
@@ -49,14 +50,15 @@ const AddAircraft = () => {
     lastMaintenanceDate: "",
     nextMaintenanceDate: "",
     airworthinessCertificate: null,
-    seatLayout: "",
+    rows: "",
+    columns: "",
+    aisles: "",
     classConfig: [],
     seatingDetails: [],
   });
 
   const travelClassOptions = [
     { value: "economy", label: "Economy" },
-    // { value: 'premium_economy', label: 'Premium Economy' },
     { value: "business", label: "Business" },
     { value: "first", label: "First" },
   ];
@@ -67,6 +69,10 @@ const AddAircraft = () => {
       ...prev,
       [name]: value,
     }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
   const handleFileChange = (e) => {
@@ -75,6 +81,10 @@ const AddAircraft = () => {
     setFormData((prev) => ({
       ...prev,
       airworthinessCertificate: file,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      airworthinessCertificate: "",
     }));
   };
 
@@ -86,6 +96,12 @@ const AddAircraft = () => {
       seatingDetails: prev.seatingDetails.filter((detail) =>
         selectedClasses.includes(detail.class)
       ),
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      classConfig: selectedClasses.length
+        ? ""
+        : "At least one class must be selected",
     }));
   };
 
@@ -115,38 +131,84 @@ const AddAircraft = () => {
     });
   };
 
-  const handleNext = () => setActiveStep((prev) => prev + 1);
+  const validateStep = () => {
+    let stepErrors = {};
+    switch (activeStep) {
+      case 0:
+        if (!formData.aircraftModel)
+          stepErrors.aircraftModel = "Aircraft model is required";
+        if (!formData.manufacturer)
+          stepErrors.manufacturer = "Manufacturer is required";
+        if (!formData.yearOfManufacture)
+          stepErrors.yearOfManufacture = "Year of manufacture is required";
+        if (!formData.registrationNumber)
+          stepErrors.registrationNumber = "Registration number is required";
+        if (!formData.serialNumber)
+          stepErrors.serialNumber = "Serial number is required";
+        break;
+      case 1:
+        if (!formData.engineManufacturer)
+          stepErrors.engineManufacturer = "Engine manufacturer is required";
+        if (!formData.engineModel)
+          stepErrors.engineModel = "Engine model is required";
+        if (!formData.lastMaintenanceDate)
+          stepErrors.lastMaintenanceDate = "Last maintenance date is required";
+        if (!formData.nextMaintenanceDate)
+          stepErrors.nextMaintenanceDate = "Next maintenance date is required";
+        if (!formData.airworthinessCertificate)
+          stepErrors.airworthinessCertificate = "Certificate file is required";
+        break;
+      case 2:
+        if (!formData.rows) stepErrors.rows = "Number of rows is required";
+        if (!formData.columns)
+          stepErrors.columns = "Number of columns is required";
+        if (!formData.aisles)
+          stepErrors.aisles = "Number of aisles is required";
+        if (!formData.classConfig.length)
+          stepErrors.classConfig = "At least one travel class is required";
+        break;
+      default:
+        break;
+    }
+    setErrors(stepErrors);
+    return Object.keys(stepErrors).length === 0;
+  };
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    if (validateStep()) setActiveStep((prev) => prev + 1);
+  };
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
-    const submitData = new FormData();
-
-    Object.keys(formData).forEach((key) => {
-      if (key === "airworthinessCertificate") {
-        submitData.append(key, formData[key]);
-      } else if (Array.isArray(formData[key])) {
-        submitData.append(key, JSON.stringify(formData[key]));
-      } else {
-        submitData.append(key, formData[key]);
-      }
-    });
-
-    try {
-      const response = await axiosInstance.post(
-        "/airline/add-aircraft",
-        submitData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+    if (validateStep()) {
+      const submitData = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (key === "airworthinessCertificate") {
+          submitData.append(key, formData[key]);
+        } else if (Array.isArray(formData[key])) {
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else {
+          submitData.append(key, formData[key]);
         }
-      );
-      console.log(response);
-      navigate("/airline/aircrafts")
-    } catch (error) {
-      console.error("Error submitting form", error);
+      });
+
+      try {
+        const response = await axiosInstance.post(
+          "/airline/add-aircraft",
+          submitData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        console.log(response);
+        navigate("/airline/aircrafts");
+      } catch (error) {
+        console.error("Error submitting form", error);
+      }
     }
   };
 
@@ -164,6 +226,8 @@ const AddAircraft = () => {
             value={formData.aircraftModel}
             onChange={handleInputChange}
             variant="outlined"
+            error={!!errors.aircraftModel}
+            helperText={errors.aircraftModel}
           />
         </Grid>
         <Grid item xs={12} md={6}>
@@ -174,6 +238,8 @@ const AddAircraft = () => {
             value={formData.manufacturer}
             onChange={handleInputChange}
             variant="outlined"
+            error={!!errors.manufacturer}
+            helperText={errors.manufacturer}
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -185,6 +251,8 @@ const AddAircraft = () => {
             value={formData.yearOfManufacture}
             onChange={handleInputChange}
             variant="outlined"
+            error={!!errors.yearOfManufacture}
+            helperText={errors.yearOfManufacture}
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -195,6 +263,8 @@ const AddAircraft = () => {
             value={formData.registrationNumber}
             onChange={handleInputChange}
             variant="outlined"
+            error={!!errors.registrationNumber}
+            helperText={errors.registrationNumber}
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -205,6 +275,8 @@ const AddAircraft = () => {
             value={formData.serialNumber}
             onChange={handleInputChange}
             variant="outlined"
+            error={!!errors.serialNumber}
+            helperText={errors.serialNumber}
           />
         </Grid>
       </Grid>
@@ -225,6 +297,8 @@ const AddAircraft = () => {
             value={formData.engineManufacturer}
             onChange={handleInputChange}
             variant="outlined"
+            error={!!errors.engineManufacturer}
+            helperText={errors.engineManufacturer}
           />
         </Grid>
         <Grid item xs={12} md={6}>
@@ -235,6 +309,8 @@ const AddAircraft = () => {
             value={formData.engineModel}
             onChange={handleInputChange}
             variant="outlined"
+            error={!!errors.engineModel}
+            helperText={errors.engineModel}
           />
         </Grid>
         <Grid item xs={12} md={6}>
@@ -247,6 +323,8 @@ const AddAircraft = () => {
             onChange={handleInputChange}
             variant="outlined"
             InputLabelProps={{ shrink: true }}
+            error={!!errors.lastMaintenanceDate}
+            helperText={errors.lastMaintenanceDate}
           />
         </Grid>
         <Grid item xs={12} md={6}>
@@ -259,6 +337,8 @@ const AddAircraft = () => {
             onChange={handleInputChange}
             variant="outlined"
             InputLabelProps={{ shrink: true }}
+            error={!!errors.nextMaintenanceDate}
+            helperText={errors.nextMaintenanceDate}
           />
         </Grid>
         <Grid item xs={12}>
@@ -301,16 +381,46 @@ const AddAircraft = () => {
           <Typography variant="subtitle1" gutterBottom>
             Aircraft Seat Layout
           </Typography>
-          <TextField
-            fullWidth
-            label="Seat Layout Configuration"
-            name="seatLayout"
-            value={formData.seatLayout}
-            onChange={handleInputChange}
-            variant="outlined"
-            placeholder="e.g., 3-3-3"
-            helperText="Format: number of seats from left to right (e.g., 3-3-3 means 3 seats - aisle - 3 seats - aisle - 3 seats)"
-          />
+
+          {/* New Fields for Rows, Columns, and Aisles */}
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Number of Rows"
+                name="rows"
+                value={formData.rows}
+                onChange={handleInputChange}
+                variant="outlined"
+                error={!!errors.rows}
+                helperText={errors.rows}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Number of Columns"
+                name="columns"
+                value={formData.columns}
+                onChange={handleInputChange}
+                variant="outlined"
+                error={!!errors.columns}
+                helperText={errors.columns}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Number of Aisles"
+                name="aisles"
+                value={formData.aisles}
+                onChange={handleInputChange}
+                variant="outlined"
+                error={!!errors.aisles}
+                helperText={errors.aisles}
+              />
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
 
@@ -327,6 +437,8 @@ const AddAircraft = () => {
             {...params}
             variant="outlined"
             label="Select Travel Classes"
+            error={!!errors.classConfig}
+            helperText={errors.classConfig}
           />
         )}
       />
@@ -468,6 +580,7 @@ const AddAircraft = () => {
                 </Button>
               ) : (
                 <Button
+                  type="button"
                   variant="contained"
                   onClick={handleNext}
                   color="primary"

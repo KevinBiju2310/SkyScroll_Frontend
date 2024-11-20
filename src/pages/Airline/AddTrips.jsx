@@ -1,51 +1,34 @@
 import { useState, useEffect } from "react";
 import AirlineLayout from "../../components/AirlineSidebar";
-import {
-  TextField,
-  MenuItem,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  Box,
-  Checkbox,
-  ListItemText,
-  OutlinedInput,
-} from "@mui/material";
 import axiosInstance from "../../config/axiosInstance";
 import { useNavigate } from "react-router-dom";
 
 const AddTrips = () => {
-  // State for form data
   const [tripData, setTripData] = useState({
-    flightNumber: "",
-    aircraftModel: "",
-    flightStatus: "",
-    departureAirport: "",
-    arrivalAirport: "",
-    departureTerminal: "",
-    arrivalTerminal: "",
-    departureGate: "",
-    arrivalGate: "",
-    departureDate: "",
-    departureTime: "",
-    arrivalDate: "",
-    arrivalTime: "",
-    recurrenceType: "specificDate",
-    recurringDays: [],
+    isDirect: true,
+    status: "scheduled",
     ticketPrices: {},
+    segments: [
+      {
+        flightNumber: "",
+        departureAirport: "",
+        arrivalAirport: "",
+        departureTime: "",
+        arrivalTime: "",
+        departureTerminal: "",
+        arrivalTerminal: "",
+        departureGate: "",
+        arrivalGate: "",
+        aircraft: "",
+      },
+    ],
   });
+
+  const [stops, setStops] = useState();
   const [aircraftModels, setAircraftModels] = useState([]);
-  const [selectedClassConfig, setSelectedClassConfig] = useState([]);
   const [airportModels, setAirportModels] = useState([]);
-  const [departureTerminals, setDepartureTerminals] = useState([]);
-  const [arrivalTerminals, setArrivalTerminals] = useState([]);
-  const [departureGates, setDepartureGates] = useState([]);
-  const [arrivalGates, setArrivalGates] = useState([]);
+  const [terminalsAndGates, setTerminalsAndGates] = useState({});
+  const [ticketClasses, setTicketClasses] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,12 +47,12 @@ const AddTrips = () => {
     const fetchAirportModels = async () => {
       try {
         const response = await axiosInstance.get("/airline/airports");
-        const airportData = response.data.response.map((airport) => ({
-          name: airport.name,
-          code: airport.code,
-          terminals: airport.terminals,
-        }));
-        setAirportModels(airportData);
+        setAirportModels(response.data.response);
+        const terminalsData = {};
+        for (const airport of response.data.response) {
+          terminalsData[airport.name] = airport.terminals || [];
+        }
+        setTerminalsAndGates(terminalsData);
       } catch (error) {
         console.error("Error fetching airports:", error);
       }
@@ -79,510 +62,430 @@ const AddTrips = () => {
     fetchAirportModels();
   }, []);
 
-  // Flight status options
-  const flightStatuses = [
-    "Scheduled",
-    "On Time",
-    "Delayed",
-    "Cancelled",
-    "Boarding",
-    "In Air",
-    "Landed",
-  ];
-
-  const daysOfWeek = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-
-  const handleInputChange = (field, value) => {
-    setTripData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    if (field === "aircraftModel") {
-      const selectedModel = aircraftModels.find(
-        (model) => model.aircraftModel === value
+  useEffect(() => {
+    const updateSegments = () => {
+      const newSegments = Array.from(
+        { length: tripData.isDirect ? 1 : stops + 1 },
+        () => ({
+          flightNumber: "",
+          departureAirport: "",
+          arrivalAirport: "",
+          departureTime: "",
+          arrivalTime: "",
+          departureTerminal: "",
+          arrivalTerminal: "",
+          departureGate: "",
+          arrivalGate: "",
+          aircraft: "",
+        })
       );
-      if (selectedModel) {
-        setSelectedClassConfig(selectedModel.classConfig);
-        const newTicketPrices = {};
-        selectedModel.classConfig.forEach((classType) => {
-          newTicketPrices[classType] = "";
-        });
-        setTripData((prev) => ({
-          ...prev,
-          ticketPrices: newTicketPrices,
-        }));
-      } else {
-        setSelectedClassConfig([]);
-      }
-    }
-  };
+      setTripData((prevData) => ({ ...prevData, segments: newSegments }));
+    };
 
-  const handleDepartureAirportChange = (value) => {
-    setTripData((prev) => ({
-      ...prev,
-      departureAirport: value,
-      departureTerminal: "",
-      departureGate: "",
-    }));
+    updateSegments();
+  }, [tripData.isDirect, stops]);
 
-    const selectedAirport = airportModels.find(
-      (airport) => airport.code === value
+  const handleAircraftChange = (e, index) => {
+    const selectedAircraft = e.target.value;
+    const selectedModel = aircraftModels.find(
+      (aircraft) => aircraft.aircraftModel === selectedAircraft
     );
-    setDepartureTerminals(selectedAirport ? selectedAirport.terminals : []);
+    const classes = selectedModel?.classConfig || [];
+    setTicketClasses(classes);
+    const initialTicketPrices = {};
+    classes.forEach((cls) => {
+      initialTicketPrices[cls] = "";
+    });
+    setTripData((prevData) => {
+      const newSegments = [...prevData.segments];
+      newSegments[index] = {
+        ...newSegments[index],
+        aircraft: selectedAircraft,
+      };
+      return {
+        ...prevData,
+        segments: newSegments,
+        ticketPrices: initialTicketPrices,
+      };
+    });
   };
 
-  const handleArrivalAirportChange = (value) => {
-    setTripData((prev) => ({
-      ...prev,
-      arrivalAirport: value,
-      arrivalTerminal: "",
-      arrivalGate: "",
-    }));
-
-    const selectedAirport = airportModels.find(
-      (airport) => airport.code === value
-    );
-    setArrivalTerminals(selectedAirport ? selectedAirport.terminals : []);
-  };
-
-  const handleDepartureTerminalChange = (value) => {
-    setTripData((prev) => ({
-      ...prev,
-      departureTerminal: value,
-      departureGate: "",
-    }));
-
-    const selectedTerminal = departureTerminals.find(
-      (terminal) => terminal.terminalName === value
-    );
-    setDepartureGates(selectedTerminal ? selectedTerminal.gates : []);
-  };
-
-  const handleArrivalTerminalChange = (value) => {
-    setTripData((prev) => ({
-      ...prev,
-      arrivalTerminal: value,
-      arrivalGate: "",
-    }));
-
-    const selectedTerminal = arrivalTerminals.find(
-      (terminal) => terminal.terminalName === value
-    );
-    setArrivalGates(selectedTerminal ? selectedTerminal.gates : []);
-  };
-
-  const handlePriceChange = (classType, value) => {
-    setTripData((prev) => ({
-      ...prev,
-      ticketPrices: {
-        ...prev.ticketPrices,
-        [classType]: value,
-      },
-    }));
+  const handleTerminalChange = (e, index, terminalType, gateType) => {
+    const terminal = e.target.value;
+    setTripData((prevData) => {
+      const newSegments = [...prevData.segments];
+      newSegments[index][terminalType] = terminal;
+      newSegments[index][gateType] = "";
+      return { ...prevData, segments: newSegments };
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axiosInstance.post("/airline/add-trips", tripData);
-      navigate("/airline/trips");
-      console.log(response);
+      await axiosInstance.post("/airline/add-trips", tripData);
+      // navigate("/airline/trips");
     } catch (error) {
       console.error("Error submitting form:", error);
     }
   };
 
-  const handleRecurrenceChange = (event) => {
+  const handleInputChange = (event, index, field, subfield) => {
     const value = event.target.value;
-    setTripData((prev) => ({
-      ...prev,
-      recurrenceType: value,
-      recurringDays: value === "specificDate" ? [] : prev.recurringDays,
-    }));
+    setTripData((prevData) => {
+      const newSegments = [...prevData.segments];
+      if (field === "segments") {
+        newSegments[index] = {
+          ...newSegments[index],
+          [subfield]: value,
+        };
+      } else {
+        prevData[field] = value;
+      }
+      return { ...prevData, segments: newSegments };
+    });
   };
-
-  const handleDaysChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setTripData((prev) => ({
-      ...prev,
-      recurringDays: typeof value === "string" ? value.split(",") : value,
-    }));
-  };
-  console.log(aircraftModels);
+  // console.log(airportModels);
+  // console.log(ticketClasses);
   return (
     <AirlineLayout>
-      <Box component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
-        {/* Flight Information Card */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Flight Information
-            </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label="Flight Number"
-                  value={tripData.flightNumber}
-                  onChange={(e) =>
-                    handleInputChange("flightNumber", e.target.value)
-                  }
-                  placeholder="e.g., AA1234"
+      <div className="p-8 bg-gray-50 min-h-screen">
+        <h2 className="text-3xl font-bold mb-8">Add New Trip</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Flight Details */}
+          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <h3 className="text-xl font-semibold">Flight Details</h3>
+
+            <div>
+              <label className="block text-sm font-medium">Flight Type:</label>
+              <select
+                value={tripData.isDirect ? "direct" : "connecting"}
+                onChange={(e) => {
+                  const isDirect = e.target.value === "direct";
+                  setTripData({ ...tripData, isDirect });
+                  setStops(isDirect ? 0 : stops);
+                }}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="direct">Direct Flight</option>
+                <option value="connecting">Connecting Flight</option>
+              </select>
+            </div>
+
+            {!tripData.isDirect && (
+              <div>
+                <label className="block text-sm font-medium">
+                  Number of Stops:
+                </label>
+                <input
+                  type="number"
+                  value={stops}
+                  onChange={(e) => setStops(Number(e.target.value))}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Aircraft Model</InputLabel>
-                  <Select
-                    value={tripData.aircraftModel}
-                    label="Aircraft Model"
-                    onChange={(e) =>
-                      handleInputChange("aircraftModel", e.target.value)
-                    }
-                  >
-                    {aircraftModels.map((model) => (
-                      <MenuItem key={model._id} value={model.aircraftModel}>
-                        {model.aircraftModel}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Flight Status</InputLabel>
-                  <Select
-                    value={tripData.flightStatus}
-                    label="Flight Status"
-                    onChange={(e) =>
-                      handleInputChange("flightStatus", e.target.value)
-                    }
-                  >
-                    {flightStatuses.map((status) => (
-                      <MenuItem key={status} value={status}>
-                        {status}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
+              </div>
+            )}
 
-        {/* Route Details Card */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Route Details
-            </Typography>
-            <Grid container spacing={3}>
-              {/* Departure Details */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Departure
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel>Departure Airport</InputLabel>
-                      <Select
-                        value={tripData.departureAirport}
-                        onChange={(e) =>
-                          handleDepartureAirportChange(e.target.value)
-                        }
-                      >
-                        {airportModels.map((airport) => (
-                          <MenuItem key={airport.code} value={airport.code}>
-                            {airport.name} ({airport.code})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel>Departure Terminal</InputLabel>
-                      <Select
-                        value={tripData.departureTerminal}
-                        onChange={(e) =>
-                          handleDepartureTerminalChange(e.target.value)
-                        }
-                        disabled={!tripData.departureAirport}
-                      >
-                        {departureTerminals.map((terminal) => (
-                          <MenuItem
-                            key={terminal._id}
-                            value={terminal.terminalName}
-                          >
-                            {terminal.terminalName}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel>Departure Gate</InputLabel>
-                      <Select
-                        value={tripData.departureGate}
-                        onChange={(e) =>
-                          handleInputChange("departureGate", e.target.value)
-                        }
-                        disabled={!tripData.departureTerminal} // Disable if no terminal selected
-                      >
-                        {departureGates.map((gate) => (
-                          <MenuItem key={gate._id} value={gate.gateNumber}>
-                            {gate.gateNumber}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </Grid>
-              </Grid>
+            <div>
+              <label className="block text-sm font-medium">
+                Flight Status:
+              </label>
+              <select
+                value={tripData.status}
+                onChange={(e) =>
+                  setTripData({ ...tripData, status: e.target.value })
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="ontime">On Time</option>
+                <option value="delayed">Delayed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="boarding">Boarding</option>
+                <option value="inair">In Air</option>
+                <option value="landed">Landed</option>
+              </select>
+            </div>
+          </div>
 
-              {/* Arrival Details */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Arrival
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel>Arrival Airport</InputLabel>
-                      <Select
-                        value={tripData.arrivalAirport}
-                        onChange={(e) =>
-                          handleArrivalAirportChange(e.target.value)
-                        }
-                      >
-                        {airportModels.map((airport) => (
-                          <MenuItem key={airport.code} value={airport.code}>
-                            {airport.name} ({airport.code})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel>Arrival Terminal</InputLabel>
-                      <Select
-                        value={tripData.arrivalTerminal}
-                        onChange={(e) =>
-                          handleArrivalTerminalChange(e.target.value)
-                        }
-                        disabled={!tripData.arrivalAirport} // Disable if no airport selected
-                      >
-                        {arrivalTerminals.map((terminal) => (
-                          <MenuItem
-                            key={terminal._id}
-                            value={terminal.terminalName}
-                          >
-                            {terminal.terminalName}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel>Arrival Gate</InputLabel>
-                      <Select
-                        value={tripData.arrivalGate}
-                        onChange={(e) =>
-                          handleInputChange("arrivalGate", e.target.value)
-                        }
-                        disabled={!tripData.arrivalTerminal} // Disable if no terminal selected
-                      >
-                        {arrivalGates.map((gate) => (
-                          <MenuItem key={gate._id} value={gate.gateNumber}>
-                            {gate.gateNumber}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-
-        {/* Time Details Card */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Time Details
-            </Typography>
-            <Grid container spacing={3}>
-              {/* Departure Time */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Departure
-                </Typography>
-                <Grid container spacing={2}>
-                  {/* Conditionally render date field for departure */}
-                  {tripData.recurrenceType === "specificDate" && (
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        type="date"
-                        label="Departure Date"
-                        value={tripData.departureDate}
-                        onChange={(e) =>
-                          handleInputChange("departureDate", e.target.value)
-                        }
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                  )}
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      type="time"
-                      label="Departure Time"
-                      value={tripData.departureTime}
+          {/* Flight Segments */}
+          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <h3 className="text-xl font-semibold">Flight Segments</h3>
+            {tripData.segments.map((segment, index) => (
+              <div key={index} className="border p-4 rounded-md bg-gray-50">
+                <h4 className="text-lg font-medium">Segment {index + 1}</h4>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Flight Number:
+                    </label>
+                    <input
+                      type="text"
+                      value={segment.flightNumber}
                       onChange={(e) =>
-                        handleInputChange("departureTime", e.target.value)
+                        handleInputChange(e, index, "segments", "flightNumber")
                       }
-                      InputLabelProps={{ shrink: true }}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
                     />
-                  </Grid>
-                </Grid>
-              </Grid>
+                  </div>
 
-              {/* Arrival Time */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Arrival
-                </Typography>
-                <Grid container spacing={2}>
-                  {/* Conditionally render date field for arrival */}
-                  {tripData.recurrenceType === "specificDate" && (
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        type="date"
-                        label="Arrival Date"
-                        value={tripData.arrivalDate}
-                        onChange={(e) =>
-                          handleInputChange("arrivalDate", e.target.value)
-                        }
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                  )}
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      type="time"
-                      label="Arrival Time"
-                      value={tripData.arrivalTime}
-                      onChange={(e) =>
-                        handleInputChange("arrivalTime", e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Grid>
-
-            {/* Recurrence selection */}
-            <Grid container spacing={3} sx={{ mt: 2 }}>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Recurrence</InputLabel>
-                  <Select
-                    value={tripData.recurrenceType}
-                    onChange={handleRecurrenceChange}
-                    label="Recurrence"
-                  >
-                    <MenuItem value="specificDate">Specific Date</MenuItem>
-                    <MenuItem value="recurring">Recurring Weekly</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              {/* Select days of the week if recurring */}
-              {tripData.recurrenceType === "recurring" && (
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Days of the Week</InputLabel>
-                    <Select
-                      multiple
-                      value={tripData.recurringDays}
-                      onChange={handleDaysChange}
-                      input={<OutlinedInput label="Days of the Week" />}
-                      renderValue={(selected) => selected.join(", ")}
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Aircraft:
+                    </label>
+                    <select
+                      value={segment.aircraft}
+                      onChange={(e) => handleAircraftChange(e, index)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
                     >
-                      {daysOfWeek.map((day) => (
-                        <MenuItem key={day} value={day}>
-                          <Checkbox
-                            checked={tripData.recurringDays.includes(day)}
-                          />
-                          <ListItemText primary={day} />
-                        </MenuItem>
+                      <option value="">Select Aircraft</option>
+                      {aircraftModels.map((aircraft) => (
+                        <option
+                          key={aircraft._id}
+                          value={aircraft.aircraftModel}
+                        >
+                          {aircraft.aircraftModel}
+                        </option>
                       ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              )}
-            </Grid>
-          </CardContent>
-        </Card>
+                    </select>
+                  </div>
 
-        {/* Ticket Pricing Card */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Ticket Pricing
-            </Typography>
-            <Grid container spacing={3}>
-              {/* Render fields based on class configuration */}
-              {selectedClassConfig.map((classType) => (
-                <Grid item xs={12} md={4} key={classType}>
-                  <TextField
-                    fullWidth
-                    label={`${
-                      classType.charAt(0).toUpperCase() + classType.slice(1)
-                    } Class Price`}
-                    value={tripData.ticketPrices[classType] || ""}
-                    onChange={(e) =>
-                      handlePriceChange(classType, e.target.value)
-                    }
-                    placeholder={`Enter ${classType} class price`}
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Departure Airport:
+                    </label>
+                    <select
+                      value={segment.departureAirport}
+                      onChange={(e) =>
+                        handleInputChange(
+                          e,
+                          index,
+                          "segments",
+                          "departureAirport"
+                        )
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
+                    >
+                      <option value="">Select Airport</option>
+                      {airportModels.map((airport) => (
+                        <option key={airport._id} value={airport.name}>
+                          {airport.name} ({airport.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Departure Terminal:
+                    </label>
+                    <select
+                      value={segment.departureTerminal}
+                      onChange={(e) =>
+                        handleTerminalChange(
+                          e,
+                          index,
+                          "departureTerminal",
+                          "departureGate"
+                        )
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      disabled={!segment.departureAirport}
+                    >
+                      <option value="">Select Terminal</option>
+                      {(terminalsAndGates[segment.departureAirport] || []).map(
+                        (terminal) => (
+                          <option
+                            key={terminal._id}
+                            value={terminal.terminalName}
+                          >
+                            {terminal.terminalName}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Departure Gate:
+                    </label>
+                    <select
+                      value={segment.departureGate}
+                      onChange={(e) =>
+                        handleInputChange(e, index, "segments", "departureGate")
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      disabled={!segment.departureTerminal}
+                    >
+                      <option value="">Select Gate</option>
+                      {(
+                        terminalsAndGates[segment.departureAirport]?.find(
+                          (t) => t.terminalName === segment.departureTerminal
+                        )?.gates || []
+                      ).map((gate) => (
+                        <option key={gate._id} value={gate.gateNumber}>
+                          {gate.gateNumber}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Arrival Airport:
+                    </label>
+                    <select
+                      value={segment.arrivalAirport}
+                      onChange={(e) =>
+                        handleInputChange(
+                          e,
+                          index,
+                          "segments",
+                          "arrivalAirport"
+                        )
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
+                    >
+                      <option value="">Select Airport</option>
+                      {airportModels.map((airport) => (
+                        <option key={airport._id} value={airport.name}>
+                          {airport.name} ({airport.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Arrival Terminal:
+                    </label>
+                    <select
+                      value={segment.arrivalTerminal}
+                      onChange={(e) =>
+                        handleTerminalChange(
+                          e,
+                          index,
+                          "arrivalTerminal",
+                          "arrivalGate"
+                        )
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      disabled={!segment.arrivalAirport}
+                    >
+                      <option value="">Select Terminal</option>
+                      {(terminalsAndGates[segment.arrivalAirport] || []).map(
+                        (terminal) => (
+                          <option
+                            key={terminal._id}
+                            value={terminal.terminalName}
+                          >
+                            {terminal.terminalName}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Arrival Gate:
+                    </label>
+                    <select
+                      value={segment.arrivalGate}
+                      onChange={(e) =>
+                        handleInputChange(e, index, "segments", "arrivalGate")
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      disabled={!segment.arrivalTerminal}
+                    >
+                      <option value="">Select Gate</option>
+                      {(
+                        terminalsAndGates[segment.arrivalAirport]?.find(
+                          (t) => t.terminalName === segment.arrivalTerminal
+                        )?.gates || []
+                      ).map((gate) => (
+                        <option key={gate._id} value={gate.gateNumber}>
+                          {gate.gateNumber}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Departure Time:
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={segment.departureTime}
+                      onChange={(e) =>
+                        handleInputChange(e, index, "segments", "departureTime")
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Arrival Time:
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={segment.arrivalTime}
+                      onChange={(e) =>
+                        handleInputChange(e, index, "segments", "arrivalTime")
+                      }
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Ticket Pricing */}
+          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <h3 className="text-xl font-semibold">Ticket Pricing</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {ticketClasses.map((cls) => (
+                <div key={cls}>
+                  <label className="block text-sm font-medium capitalize">
+                    {cls}:
+                  </label>
+                  <input
                     type="number"
+                    value={tripData.ticketPrices[cls]}
+                    onChange={(e) =>
+                      setTripData((prevData) => ({
+                        ...prevData,
+                        ticketPrices: {
+                          ...prevData.ticketPrices,
+                          [cls]: e.target.value,
+                        },
+                      }))
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
-                </Grid>
+                </div>
               ))}
-            </Grid>
-          </CardContent>
-        </Card>
+            </div>
+          </div>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button
+          <button
             type="submit"
-            variant="contained"
-            color="primary"
-            size="large"
+            className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Add Trip
-          </Button>
-        </Box>
-      </Box>
+          </button>
+        </form>
+      </div>
     </AirlineLayout>
   );
 };

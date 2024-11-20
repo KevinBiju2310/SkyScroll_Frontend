@@ -9,22 +9,23 @@ import {
   LogOut,
   Menu,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
-import path from "path";
 
 const LayoutComponent = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const user = useSelector((state) => state.user.user);
+  const profilePic = user?.profilepic;
 
   const sidebarItems = [
-    { icon: Home, label: "Dashboard" },
+    { icon: Home, label: "Dashboard", path:"/airline/dashboard"},
     { icon: Plane, label: "Aircrafts", path: "/airline/aircrafts" },
-    { icon: Calendar, label: "Bookings" },
+    { icon: Calendar, label: "Bookings", path: "/airline/bookings" },
     { icon: MessageSquare, label: "Messages" },
-    { icon: Map, label: "Trip Details", path: "/airline/trips" }, 
+    { icon: Map, label: "Trip Details", path: "/airline/trips" },
     { icon: User, label: "Profile", path: "/airline/profile" },
   ];
 
@@ -38,6 +39,13 @@ const LayoutComponent = ({ children }) => {
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
       >
+        <div className="flex items-center justify-center mt-4">
+          <img
+            src={profilePic}
+            alt="Profile"
+            className="rounded-full w-16 h-16 border-2 border-white object-cover"
+          />
+        </div>
         <nav className="flex-1 mt-10 overflow-y-auto">
           <ul>
             {sidebarItems.map((item, index) => (

@@ -1,200 +1,254 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaPlus } from "react-icons/fa";
 import {
+  Plus,
+  Edit2,
+  Trash2,
   Plane,
-  Clock,
   Calendar,
+  Clock,
   Building2,
-  ArrowRight,
-  Edit,
-  XCircle,
+  DoorOpen,
+  DollarSign,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
-import AirlineLayout from "../../components/AirlineSidebar";
 import axiosInstance from "../../config/axiosInstance";
+import AirlineLayout from "../../components/AirlineSidebar";
 import ConfirmationModal from "../../components/ConfirmationModal";
 
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
-
-const formatTime = (dateString) => {
-  return new Date(dateString).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
 const Trips = () => {
-  const [tripDetails, setTripDetails] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [tripToDelete, setTripToDelete] = useState(null);
   const navigate = useNavigate();
-
-  const handleAddTrip = () => {
-    navigate("/airline/trips/addtrip");
-  };
 
   useEffect(() => {
     const fetchTrips = async () => {
       try {
         const response = await axiosInstance.get("/airline/trips");
-        console.log(response);
-        setTripDetails(response.data.response);
-      } catch (error) {
-        console.error("Error fetching trips:", error);
+        setTrips(response.data.response);
+      } catch (err) {
+        console.error("Error fetching trips:", err);
+        setError("Failed to load trips");
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchTrips();
   }, []);
 
-  const handleCancelTrip = (trip) => {
-    setSelectedTrip(trip);
-    setIsModalOpen(true);
+  const handleAddTrip = () => {
+    navigate("/airline/trips/addtrip");
   };
 
-  const handleConfirmDelete = async () => {
-    if (!selectedTrip) return;
-    try {
-      await axiosInstance.delete(`/airline/trips/${selectedTrip._id}`);
-      setTripDetails(
-        tripDetails.filter((trip) => trip._id !== selectedTrip._id)
-      );
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error("Error deleting trip:", error);
+  const handleEditTrip = (tripId) => {
+    navigate(`/airline/trips/edit/${tripId}`);
+  };
+
+  const confirmDeleteTrip = (tripId) => {
+    setTripToDelete(tripId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteTrip = async () => {
+    if (tripToDelete) {
+      try {
+        await axiosInstance.delete(`/airline/trips/${tripToDelete}`);
+        setTrips(trips.filter((trip) => trip._id !== tripToDelete));
+        setDeleteModalOpen(false);
+        setTripToDelete(null);
+      } catch (err) {
+        console.error("Error deleting trip:", err);
+        alert("Failed to delete trip"); 
+      }
     }
   };
 
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setTripToDelete(null);
+  };
+
+  if (loading) {
+    return (
+      <AirlineLayout>
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <p className="mt-2 text-gray-600">Loading trips...</p>
+        </div>
+      </AirlineLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AirlineLayout>
+        <div className="flex flex-col items-center justify-center min-h-screen text-red-500">
+          <AlertCircle className="w-8 h-8 mb-2" />
+          <span>{error}</span>
+        </div>
+      </AirlineLayout>
+    );
+  }
+
   return (
     <AirlineLayout>
-      <div className="p-6 max-w-10xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-slate-800">Trip Details</h1>
+      <div className="p-8 bg-gray-50 min-h-screen">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-800">All Trips</h2>
           <button
-            className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-colors"
             onClick={handleAddTrip}
+            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
           >
-            <FaPlus className="mr-2" />
+            <Plus className="w-5 h-5 mr-2" />
             Add Trip
           </button>
         </div>
 
-        {tripDetails.length === 0 ? (
-          <div className="text-center text-gray-500 mt-6">
-            No trips scheduled
-          </div>
-        ) : (
-          tripDetails.map((trip) => (
+        {/* Vertical layout */}
+        <div className="space-y-6">
+          {trips.map((trip) => (
             <div
               key={trip._id}
-              className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 mb-6"
+              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
             >
-              <div className="flex flex-col space-y-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-slate-100 p-2 rounded-lg">
-                      <Plane className="h-6 w-6 text-slate-800" />
-                    </div>
-                    <span className="text-lg font-semibold text-slate-800">
-                      Flight - {trip.flightNumber}
-                    </span>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      Trip Details
+                    </h3>
+                    <p className="text-gray-500 mt-1">
+                      {trip.isDirect ? "Direct Flight" : "Multiple Segments"}
+                    </p>
                   </div>
-                  <span className="px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium capitalize">
-                    {trip.status}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center py-4">
-                  <div className="flex-1">
-                    <div className="text-3xl font-bold text-slate-800">
-                      {trip.departureAirport.name}
-                    </div>
-                    <div className="text-slate-500">
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Clock className="h-4 w-4" />
-                        <span>{formatTime(trip.departureTime)}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Building2 className="h-4 w-4" />
-                        <span>
-                          Terminal {trip.departureTerminal} • Gate{" "}
-                          {trip.departureGate}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center px-8">
-                    <div className="text-slate-400 text-sm">
-                      {trip.duration}
-                    </div>
-                    <div className="w-32 h-px bg-slate-300 my-2 relative">
-                      <ArrowRight className="absolute top-1/2 right-0 h-4 w-4 text-slate-400 -translate-y-1/2" />
-                    </div>
-                    <div className="text-slate-400 text-sm"></div>
-                  </div>
-
-                  <div className="flex-1 text-right">
-                    <div className="text-3xl font-bold text-slate-800">
-                      {trip.arrivalAirport.name}
-                    </div>
-                    <div className="text-slate-500">
-                      <div className="flex items-center justify-end space-x-2 mt-2">
-                        <Clock className="h-4 w-4" />
-                        <span>{formatTime(trip.arrivalTime)}</span>
-                      </div>
-                      <div className="flex items-center justify-end space-x-2 mt-1">
-                        <Building2 className="h-4 w-4" />
-                        <span>
-                          Terminal {trip.arrivalTerminal} • Gate{" "}
-                          {trip.arrivalGate}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-slate-100 rounded-lg">
-                      <Calendar className="h-5 w-5 text-slate-800" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-slate-500">Flight Date</div>
-                      <div className="font-medium text-slate-700">
-                        {formatDate(trip.departureTime)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <button className="flex items-center px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Trip
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditTrip(trip._id)}
+                      className="p-2 text-gray-600 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                    >
+                      <Edit2 className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => handleCancelTrip(trip)}
-                      className="flex items-center px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
+                      onClick={() => confirmDeleteTrip(trip._id)}
+                      className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors duration-200"
                     >
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Cancel Trip
+                      <Trash2 className="w-5 h-5" />
                     </button>
+                  </div>
+                </div>
+
+                {trip.segments.map((segment, index) => (
+                  <div
+                    key={segment._id}
+                    className="mt-4 border border-gray-100 rounded-lg p-4 bg-gray-50"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Plane className="w-5 h-5 text-blue-500" />
+                      <h4 className="font-semibold text-gray-700">
+                        Flight {segment.flightNumber}
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm text-gray-500">Departure</p>
+                          <p className="font-medium">
+                            {segment.departureAirport?.name}
+                          </p>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(
+                              segment.departureTime
+                            ).toLocaleDateString()}
+                            <Clock className="w-4 h-4 ml-2" />
+                            {new Date(
+                              segment.departureTime
+                            ).toLocaleTimeString()}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 text-sm">
+                            <Building2 className="w-4 h-4" />
+                            Terminal {segment.departureTerminal}
+                            <DoorOpen className="w-4 h-4 ml-2" />
+                            Gate {segment.departureGate}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm text-gray-500">Arrival</p>
+                          <p className="font-medium">
+                            {segment.arrivalAirport?.name}
+                          </p>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(segment.arrivalTime).toLocaleDateString()}
+                            <Clock className="w-4 h-4 ml-2" />
+                            {new Date(segment.arrivalTime).toLocaleTimeString()}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 text-sm">
+                            <Building2 className="w-4 h-4" />
+                            Terminal {segment.arrivalTerminal}
+                            <DoorOpen className="w-4 h-4 ml-2" />
+                            Gate {segment.arrivalGate}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                        {segment.status.charAt(0).toUpperCase() +
+                          segment.status.slice(1)}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {segment.aircraft?.modelName}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="mt-4">
+                  <h4 className="text-lg font-semibold flex items-center gap-2 text-gray-800">
+                    <DollarSign className="w-5 h-5 text-green-500" />
+                    Ticket Prices
+                  </h4>
+                  <div className="mt-2 grid grid-cols-2 gap-4">
+                    {Object.entries(trip.ticketPrices || {}).map(
+                      ([classType, price]) =>
+                        price ? (
+                          <div
+                            key={classType}
+                            className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
+                          >
+                            <span className="text-gray-600">
+                              {classType.charAt(0).toUpperCase() +
+                                classType.slice(1)}
+                            </span>
+                            <span className="font-semibold text-green-600">
+                              ${price}
+                            </span>
+                          </div>
+                        ) : null
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          ))
-        )}
+          ))}
+        </div>
+
         <ConfirmationModal
-          isOpen={isModalOpen}
-          message="Are you sure you want to cancel this trip?"
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setIsModalOpen(false)}
+          isOpen={deleteModalOpen}
+          onConfirm={handleDeleteTrip}
+          onCancel={handleCancelDelete}
+          message="Are you sure you want to delete this trip?"
         />
       </div>
     </AirlineLayout>

@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "../ProtectedRoute/ProtectedRoute";
+import LoadingFallback from "../components/LoadingFallback";
 
 const AdminLogin = React.lazy(() => import("../pages/Admin/SigninPage"));
 const AdminDashboard = React.lazy(() => import("../pages/Admin/Dashboard"));
@@ -12,10 +13,13 @@ const AirlineLoginDetails = React.lazy(() =>
 );
 const UpdateAirport = React.lazy(() => import("../pages/Admin/UpdateAirport"));
 const Aircrafts = React.lazy(() => import("../pages/Admin/Aircrafts"));
+const Bookings = React.lazy(() => import("../pages/Admin/Bookings"));
+const FlightSchedules = React.lazy(()=>import("../pages/Admin/FlightSchedules"));
+
 
 const AdminRoutes = () => {
   return (
-    <Suspense fallback={<div>Loading Admin Pages...</div>}>
+    <Suspense fallback={<LoadingFallback />}>
       <Routes>
         <Route path="" element={<AdminLogin />} />
         <Route element={<ProtectedRoute adminOnly />}>
@@ -29,6 +33,8 @@ const AdminRoutes = () => {
           />
           <Route path="airline-login" element={<AirlineLoginDetails />} />
           <Route path="aircrafts" element={<Aircrafts />} />
+          <Route path="bookings" element={<Bookings />} />
+          <Route path="flight-schedules" element={<FlightSchedules />} />
         </Route>
       </Routes>
     </Suspense>

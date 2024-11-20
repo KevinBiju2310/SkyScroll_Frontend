@@ -8,7 +8,6 @@ import {
   Typography,
   InputAdornment,
   IconButton,
-  Link,
   Container,
   Snackbar,
 } from "@mui/material";
@@ -176,11 +175,6 @@ const AdminSignIn = () => {
               >
                 Sign In
               </Button>
-              <Box sx={{ textAlign: "center" }}>
-                <Link href="#" variant="body2">
-                  Forgot password?
-                </Link>
-              </Box>
             </Box>
           </CardContent>
         </Card>

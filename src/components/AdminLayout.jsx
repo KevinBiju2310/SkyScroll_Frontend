@@ -1,4 +1,13 @@
-import { Home, Users, Plane, LogIn, MapPin, LogOut } from "lucide-react";
+import {
+  Home,
+  Users,
+  Plane,
+  LogIn,
+  MapPin,
+  LogOut,
+  Calendar,
+  Clock,
+} from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout } from "../redux/userSlice";
@@ -13,7 +22,9 @@ const Sidebar = () => {
     { name: "Users", icon: Users, path: "/admin/users" },
     { name: "Aircrafts", icon: Plane, path: "/admin/aircrafts" },
     { name: "Airline Login", icon: LogIn, path: "/admin/airline-login" },
+    { name: "Flight Schedules", icon: Clock, path: "/admin/flight-schedules" },
     { name: "Airports", icon: MapPin, path: "/admin/airports" },
+    { name: "Bookings", icon: Calendar, path: "/admin/bookings" },
   ];
 
   const handleNavigation = (path) => {

@@ -1,7 +1,9 @@
 import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "../ProtectedRoute/ProtectedRoute";
+import LoadingFallback from "../components/LoadingFallback";
 
+import SeatConfigPage from "../pages/Airline/SeatConfig";
 const LogIn = React.lazy(() => import("../pages/Airline/LogIn"));
 const RegistrationForm = React.lazy(() =>
   import("../pages/Airline/RegistrationForm")
@@ -12,10 +14,14 @@ const Aircraft = React.lazy(() => import("../pages/Airline/Aircraft"));
 const AddAircraft = React.lazy(() => import("../pages/Airline/AddAircraft"));
 const Trips = React.lazy(() => import("../pages/Airline/Trips"));
 const AddTrip = React.lazy(() => import("../pages/Airline/AddTrips"));
+const UpdateAircraft = React.lazy(() =>
+  import("../pages/Airline/UpdateAircraft")
+);
+const Bookings = React.lazy(() => import("../pages/Airline/Bookings"));
 
 const UserRoutes = () => {
   return (
-    <Suspense fallback={<div>Loading Airline Pages...</div>}>
+    <Suspense fallback={<LoadingFallback />}>
       <Routes>
         <Route path="" element={<LogIn />} />
         <Route path="register" element={<RegistrationForm />} />
@@ -24,8 +30,17 @@ const UserRoutes = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="aircrafts" element={<Aircraft />} />
           <Route path="aircrafts/addaircraft" element={<AddAircraft />} />
+          <Route
+            path="aircrafts/updateaircraft/:id"
+            element={<UpdateAircraft />}
+          />
+          <Route
+            path="aircraft/:id/seats/:classType"
+            element={<SeatConfigPage />}
+          />
           <Route path="trips" element={<Trips />} />
           <Route path="trips/addtrip" element={<AddTrip />} />
+          <Route path="bookings" element={<Bookings />} />
         </Route>
       </Routes>
     </Suspense>
