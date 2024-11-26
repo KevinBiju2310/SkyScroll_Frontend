@@ -1,21 +1,38 @@
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 import {
   Plane,
   Calendar,
+  Send,
+  Download,
   Users,
   Phone,
   Mail,
   CreditCard,
   AlertCircle,
+  MessageCircle,
 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ChatSidebar from "../components/ChatSidebar";
+import ticketGenerator from "../utils/ticketGenerator";
+import ConfirmationModal from "../components/ConfirmationModal";
+import axiosInstance from "../config/axiosInstance";
+import { updateBookingStatus } from "../redux/bookingSlice";
 
 const BookingDetail = () => {
   const { id } = useParams();
   const bookings = useSelector((state) => state.bookings.bookings);
   const booking = bookings.find((b) => b._id === id);
+
+  const dispatch = useDispatch();
+
+  const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(false);
+  const [selectedAirline, setSelectedAirline] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (!booking) {
     return (
@@ -41,16 +58,77 @@ const BookingDetail = () => {
     }
   };
 
+  const handleDownloadTicket = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const doc = await ticketGenerator(booking);
+      const ticketName = `ticket.pdf`;
+      doc.save(ticketName);
+    } catch (error) {
+      console.error("Error generating Ticket:", error);
+    } finally {
+      setTimeout(() => {
+        setIsDownloading(false);
+      }, 800);
+    }
+  };
+
+  const handleCancelBooking = () => {
+    setIsModalOpen(true);
+  };
+
+  const confirmCancelBooking = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.put(`/cancelbooking/${id}`);
+      dispatch(updateBookingStatus(response.data.response)); // Update Redux store
+      // console.log("Booking cancelled:", response.data.response);
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+    } finally {
+      setLoading(false);
+      setIsModalOpen(false);
+    }
+  };
+
+  const cancelModal = () => {
+    setIsModalOpen(false);
+  };
+  // Open chat sidebar
+  const openChatSidebar = () => {
+    setSelectedAirline({
+      airlineName: booking.flightId.airline?.airlineName || "Airline Support",
+      profilepic: booking.flightId.airline?.profilepic || "",
+    });
+    setIsChatSidebarOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {isChatSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+          onClick={() => setIsChatSidebarOpen(false)}
+        />
+      )}
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-8 mt-16">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-8 text-white">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-8 text-white flex justify-between items-center">
             <h2 className="text-3xl font-bold mb-2">Booking Details</h2>
-            {/* <p className="text-blue-100">Booking ID: {booking._id}</p> */}
+            <button
+              onClick={handleDownloadTicket}
+              disabled={isDownloading}
+              className="flex items-center space-x-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
+            >
+              <Download
+                className={`w-5 h-5 ${isDownloading ? "animate-spin" : ""}`}
+              />
+              <span>{isDownloading ? "Generating..." : "Download Ticket"}</span>
+            </button>
           </div>
 
           {/* Flight Info Section */}
@@ -61,7 +139,7 @@ const BookingDetail = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-lg font-semibold">
-                      {booking.flightId.segments[0]?.departureAirport?.name ||
+                      {booking.flightId.segments?.[0]?.departureAirport?.name ||
                         "N/A"}
                     </p>
                     <p className="text-sm text-gray-500">Departure</p>
@@ -75,7 +153,7 @@ const BookingDetail = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-semibold">
-                      {booking.flightId.segments[
+                      {booking.flightId.segments?.[
                         booking.flightId.segments.length - 1
                       ]?.arrivalAirport?.name || "N/A"}
                     </p>
@@ -89,7 +167,7 @@ const BookingDetail = () => {
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm text-gray-500">Flight Number</p>
                 <p className="font-semibold">
-                  {booking.flightId.segments[0]?.flightNumber || "N/A"}
+                  {booking.flightId.segments?.[0]?.flightNumber || "N/A"}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
@@ -175,10 +253,51 @@ const BookingDetail = () => {
               </div>
             </div>
           </div>
+
+          {/* Chat Support Section */}
+          <div className="p-6 border-t bg-gray-50">
+            <div className="flex items-center justify-between">
+              {/* Chat Support */}
+              <div className="flex items-center space-x-4">
+                <MessageCircle className="w-6 h-6 text-blue-600" />
+                <h3 className="text-lg font-semibold">Need Help?</h3>
+                <button
+                  onClick={openChatSidebar}
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Send className="w-5 h-5" />
+                  <span>Start Chat Support</span>
+                </button>
+              </div>
+
+              {/* Cancel Booking Button */}
+              <button
+                onClick={handleCancelBooking}
+                className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                disabled={loading || booking.bookingStatus === "CANCELLED"}
+              >
+                <span>{loading ? "Processing..." : "Cancel Booking"}</span>
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mt-2">
+              Our support team is ready to assist you with any questions about
+              your booking.
+            </p>
+          </div>
         </div>
       </div>
-
       <Footer />
+      <ChatSidebar
+        selectedAirline={selectedAirline}
+        isSidebarOpen={isChatSidebarOpen}
+        closeSidebar={() => setIsChatSidebarOpen(false)}
+      />
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onConfirm={confirmCancelBooking}
+        onCancel={cancelModal}
+        message="Are you sure you want to cancel this booking? This action cannot be undone."
+      />
     </div>
   );
 };

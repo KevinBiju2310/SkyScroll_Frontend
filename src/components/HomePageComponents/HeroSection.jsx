@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { MapPin, Calendar, Search, Plus, Minus } from "lucide-react";
 import axiosInstance from "../../config/axiosInstance";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
   const [passengers, setPassengers] = useState({ adults: 1, children: 0 });
@@ -10,11 +10,12 @@ const HeroSection = () => {
   const [showToSuggestions, setShowToSuggestions] = useState(false);
   const [filteredFromAirports, setFilteredFromAirports] = useState([]);
   const [filteredToAirports, setFilteredToAirports] = useState([]);
+  const [errors, setErrors] = useState([]);
+  const [showErrors, setShowErrors] = useState(false);
   const fromRef = useRef(null);
   const toRef = useRef(null);
 
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [tripDetails, setTripDetails] = useState({
     fromAirport: "",
     toAirport: "",
@@ -45,7 +46,6 @@ const HeroSection = () => {
     };
     fetchAirports();
 
-    // Add click event listener to handle clicks outside
     const handleClickOutside = (event) => {
       if (fromRef.current && !fromRef.current.contains(event.target)) {
         setShowFromSuggestions(false);
@@ -61,6 +61,7 @@ const HeroSection = () => {
 
   const handleTripDetailsChange = (field, value) => {
     setTripDetails((prev) => ({ ...prev, [field]: value }));
+    setShowErrors(false);
 
     if (field === "fromAirport") {
       const filtered = airports
@@ -99,21 +100,74 @@ const HeroSection = () => {
     }
   };
 
-  const handleSearch = () => {
-    // Create a new URLSearchParams object with the current search parameters
-    const params = new URLSearchParams({
-      from: tripDetails.fromAirport,
-      to: tripDetails.toAirport,
-      departureDate: tripDetails.departureDate,
-      returnDate: tripDetails.returnDate,
-      travelClass: tripDetails.travelClass,
-      tripType: tripDetails.tripType,
-      adults: passengers.adults.toString(),
-      children: passengers.children.toString(),
-    });
+  const validateForm = () => {
+    const newErrors = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // Navigate to the search trip page with the constructed params
-    navigate(`/search-trip?${params.toString()}`);
+    // Check if departure and arrival airports are filled
+    if (!tripDetails.fromAirport.trim()) {
+      newErrors.push("Please select a departure airport");
+    }
+
+    if (!tripDetails.toAirport.trim()) {
+      newErrors.push("Please select an arrival airport");
+    }
+
+    // Check if departure and arrival airports are different
+    if (
+      tripDetails.fromAirport.trim() &&
+      tripDetails.toAirport.trim() &&
+      tripDetails.fromAirport.toLowerCase() ===
+        tripDetails.toAirport.toLowerCase()
+    ) {
+      newErrors.push("Departure and arrival airports cannot be the same");
+    }
+
+    // Check if departure date is selected
+    if (!tripDetails.departureDate) {
+      newErrors.push("Please select a departure date");
+    } else {
+      const departureDate = new Date(tripDetails.departureDate);
+      if (departureDate < today) {
+        newErrors.push("Departure date cannot be in the past");
+      }
+    }
+
+    // Check return date for round trips
+    if (tripDetails.tripType === "roundTrip") {
+      if (!tripDetails.returnDate) {
+        newErrors.push("Please select a return date for round trip");
+      } else {
+        const departureDate = new Date(tripDetails.departureDate);
+        const returnDate = new Date(tripDetails.returnDate);
+        if (returnDate < departureDate) {
+          newErrors.push("Return date cannot be before departure date");
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return newErrors.length === 0;
+  };
+
+  const handleSearch = () => {
+    if (validateForm()) {
+      const params = new URLSearchParams({
+        from: tripDetails.fromAirport,
+        to: tripDetails.toAirport,
+        departureDate: tripDetails.departureDate,
+        returnDate: tripDetails.returnDate,
+        travelClass: tripDetails.travelClass,
+        tripType: tripDetails.tripType,
+        adults: passengers.adults.toString(),
+        children: passengers.children.toString(),
+      });
+
+      navigate(`/search-trip?${params.toString()}`);
+    } else {
+      setShowErrors(true);
+    }
   };
 
   return (
@@ -136,6 +190,15 @@ const HeroSection = () => {
             </p>
           </div>
           <div className="p-8">
+            {showErrors && errors.length > 0 && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                {errors.map((error, index) => (
+                  <div key={index} className="text-red-600 mb-1">
+                    • {error}
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="relative" ref={fromRef}>
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />

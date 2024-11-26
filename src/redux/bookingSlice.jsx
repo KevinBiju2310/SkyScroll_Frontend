@@ -9,8 +9,14 @@ const bookingsSlice = createSlice({
     setBookings: (state, action) => {
       state.bookings = action.payload;
     },
+    updateBookingStatus: (state, action) => {
+      const updatedBooking = action.payload;
+      state.bookings = state.bookings.map((booking) =>
+        booking._id === updatedBooking._id ? updatedBooking : booking
+      );
+    },
   },
 });
 
-export const { setBookings } = bookingsSlice.actions;
+export const { setBookings, updateBookingStatus } = bookingsSlice.actions;
 export default bookingsSlice.reducer;

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react";
 import {
   Home,
@@ -21,10 +22,10 @@ const LayoutComponent = ({ children }) => {
   const profilePic = user?.profilepic;
 
   const sidebarItems = [
-    { icon: Home, label: "Dashboard", path:"/airline/dashboard"},
+    { icon: Home, label: "Dashboard", path: "/airline/dashboard" },
     { icon: Plane, label: "Aircrafts", path: "/airline/aircrafts" },
     { icon: Calendar, label: "Bookings", path: "/airline/bookings" },
-    { icon: MessageSquare, label: "Messages" },
+    { icon: MessageSquare, label: "Messages", path: "/airline/messages" },
     { icon: Map, label: "Trip Details", path: "/airline/trips" },
     { icon: User, label: "Profile", path: "/airline/profile" },
   ];

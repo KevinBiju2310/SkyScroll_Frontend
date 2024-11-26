@@ -49,7 +49,7 @@ const OneWayFlight = ({
     const lastArrival = segments[segments.length - 1].arrivalTime;
     return calculateDuration(firstDeparture, lastArrival);
   };
-console.log(flight)
+  console.log(flight);
   return (
     <div className="w-full max-w-4xl bg-white border rounded-xl hover:shadow-lg transition-all duration-300 m-4">
       <div className="p-5">
@@ -133,7 +133,7 @@ console.log(flight)
             {/* Price Information */}
             <div className="text-right">
               <p className="text-2xl font-bold text-gray-900">
-                ${calculatePrice()}
+                INR {calculatePrice()}
               </p>
               <p className="text-sm text-gray-500">
                 {passengerCount} passenger{passengerCount > 1 ? "s" : ""}

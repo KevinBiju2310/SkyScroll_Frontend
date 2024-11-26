@@ -10,7 +10,6 @@ const RoundTripFlight = ({
   const calculateTotalFlightPrice = (flight) => {
     return flight.ticketPrices[travelClass.toLowerCase()];
   };
-
   // Render flight segments without individual price calculation
   const renderFlightDetails = (flightSegments) => {
     console.log(flightSegments);

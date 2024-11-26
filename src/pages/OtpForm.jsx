@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import { TextField, Button, Box, Typography, Snackbar } from "@mui/material";
 import axiosInstance from "../config/axiosInstance";

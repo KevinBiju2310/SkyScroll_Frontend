@@ -138,7 +138,7 @@ const Itinerary = () => {
             </div>
             <div className="text-right">
               <p className="text-lg font-semibold text-green-500">
-                ${flightDetails.ticketPrices[travelClass.toLowerCase()]}
+                INR {flightDetails.ticketPrices[travelClass.toLowerCase()]}
               </p>
               <p className="text-gray-600">Class: {travelClass}</p>
             </div>
@@ -283,12 +283,12 @@ const Itinerary = () => {
         >
           Skip Seat Selection
         </button>
-        <button
+        {/* <button
           onClick={() => setCurrentStep(3)}
           className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
         >
           Confirm Seats
-        </button>
+        </button> */}
       </div>
     </div>
   );

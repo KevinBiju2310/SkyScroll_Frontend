@@ -211,7 +211,7 @@ const Bookings = () => {
                   <li key={index}>
                     <strong>{passenger.fullName}</strong> (
                     {passenger.passengerType})
-                    <div>Email: {passenger.email}</div>
+                    {/* <div>Email: {passenger.email}</div> */}
                     <div>Gender: {passenger.gender}</div>
                     <div>Nationality: {passenger.nationality}</div>
                   </li>
