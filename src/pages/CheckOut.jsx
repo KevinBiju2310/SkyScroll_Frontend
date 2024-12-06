@@ -62,10 +62,7 @@ const CheckOut = () => {
         <div className="bg-white rounded-lg shadow-lg p-6">
           {paymentProcessing && clientSecret && (
             <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <CheckoutForm
-                clientSecret={clientSecret}
-                bookingDetails={bookingDetails}
-              />
+              <CheckoutForm bookingDetails={bookingDetails} />
             </Elements>
           )}
         </div>

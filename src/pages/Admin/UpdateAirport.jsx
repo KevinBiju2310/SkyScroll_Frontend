@@ -86,6 +86,7 @@ const UpdateAirport = () => {
       //   alert("Airport updated successfully!");
       navigate("/admin/airports"); // Navigate back to the airport list
     } catch (err) {
+      alert("Airport name exists")
       setError(err.message || "Failed to update airport");
     }
   };

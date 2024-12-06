@@ -6,13 +6,9 @@ import {
   Calendar,
   Settings2,
   FileCheck,
-  Building2,
-  Hash,
-  Clock,
   Users,
   ChevronRight,
   AlertCircle,
-  Loader,
 } from "lucide-react";
 import AirlineLayout from "../../components/AirlineSidebar";
 
@@ -21,7 +17,7 @@ const UpdateAircraft = () => {
   const navigate = useNavigate();
   const [aircraft, setAircraft] = useState();
   const [seatLayouts, setSeatLayouts] = useState({});
-  const [hoveredSeat, setHoveredSeat] = useState(null);
+  // const [hoveredSeat, setHoveredSeat] = useState(null);
   // const [seats, setSeats] = useState([]);
   //   const [loading, setLoading] = useState(true);
 
@@ -48,23 +44,33 @@ const UpdateAircraft = () => {
   const initializeSeatGrid = (aircraftData) => {
     if (!aircraftData || !aircraftData.columns) return;
 
-    const columns = parseInt(aircraftData.columns);
+    const columns =
+      parseInt(aircraftData.columns) + parseInt(aircraftData.aisles);
+
+    const aisleIdx = Math.floor(columns / 2);
     const seatLayouts = {};
 
     for (const seatDetail of aircraftData.seatingDetails) {
       const totalSeats = seatDetail.totalSeats;
-      const rows = Math.ceil(totalSeats / columns);
+      const rows = Math.ceil(totalSeats / columns) + 1;
 
       const seatsArray = [];
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < columns; col++) {
-          const seatNumber = `${row + 1}${String.fromCharCode(65 + col)}`;
+          const isAisle = col === aisleIdx; // Aisle is placed at calculated index
+          const seatNumber = isAisle
+            ? null
+            : `${row + 1}${String.fromCharCode(
+                65 + col - (col > aisleIdx ? 1 : 0)
+              )}`;
           const seatData = seatDetail.seats.find(
             (seat) => seat.seatNumber === seatNumber
           );
           seatsArray.push({
-            id: `${seatDetail.class}-${row}-${col}`,
-            type: seatData?.type || null,
+            id: isAisle
+              ? `aisle-${row}-${col}`
+              : `${seatDetail.class}-${row}-${col}`,
+            type: isAisle ? "aisle" : seatData?.type || null,
             seatNumber,
           });
         }
@@ -73,14 +79,6 @@ const UpdateAircraft = () => {
       seatLayouts[seatDetail.class] = { rows, columns, seats: seatsArray };
     }
     setSeatLayouts(seatLayouts);
-  };
-
-  const handleMouseEnter = (seat) => {
-    setHoveredSeat(seat);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredSeat(null);
   };
 
   const renderSeatRow = (seatLayout, rowIndex) => {
@@ -94,20 +92,20 @@ const UpdateAircraft = () => {
           <div
             key={seat.id}
             className={`relative w-12 h-12 m-1 rounded-lg flex items-center justify-center 
-              ${seat.type ? "bg-gray-200 cursor-pointer" : "bg-transparent"}`}
-            onMouseEnter={() => seat.type && handleMouseEnter(seat)}
-            onMouseLeave={handleMouseLeave}
+              ${
+                seat.type === "aisle"
+                  ? "bg-gray-300"
+                  : seat.type
+                  ? "bg-gray-200 cursor-pointer"
+                  : "bg-transparent"
+              }`}
           >
-            {seat.type ? (
+            {seat.type === "aisle" ? (
+              <div className="text-gray-800">Aisle</div>
+            ) : seat.type ? (
               seat.seatNumber
             ) : (
               <span className="invisible">Empty</span>
-            )}
-            {hoveredSeat && hoveredSeat.id === seat.id && seat.type && (
-              <div className="absolute bottom-full mb-2 p-2 w-max rounded-md bg-gray-800 text-white text-xs shadow-lg">
-                <p>Seat: {hoveredSeat.seatNumber}</p>
-                <p>Type: {hoveredSeat.type}</p>
-              </div>
             )}
           </div>
         ))}

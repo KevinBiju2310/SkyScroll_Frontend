@@ -6,6 +6,7 @@ const SeatMap = ({
   travelClass,
   onSeatSelect,
   selectedSeats,
+  bookedSeats,
 }) => {
   const [aircrafts, setAircrafts] = useState([]);
   const [hoveredSeat, setHoveredSeat] = useState(null);
@@ -32,9 +33,16 @@ const SeatMap = ({
     setAircrafts(processedAircrafts);
   }, [flightDetails, travelClass]);
 
+  const isSeatBooked = (seatNumber, segmentIndex) => {
+    return bookedSeats?.[segmentIndex]?.includes(seatNumber);
+  };
+
   const getSeatColor = (seat, segmentIndex) => {
     if (selectedSeats[segmentIndex]?.includes(seat.seatNumber)) {
       return "bg-blue-500 text-white";
+    }
+    if (isSeatBooked(seat.seatNumber, segmentIndex)) {
+      return "bg-gray-400 cursor-not-allowed";
     }
     switch (seat.status) {
       case "available":
@@ -65,7 +73,11 @@ const SeatMap = ({
   };
 
   const handleSeatClick = (seat, segmentIndex) => {
-    if (seat.status === "occupied") return;
+    if (
+      isSeatBooked(seat.seatNumber, segmentIndex) ||
+      seat.status === "occupied"
+    )
+      return;
     onSeatSelect(seat.seatNumber, segmentIndex);
   };
 
@@ -80,7 +92,7 @@ const SeatMap = ({
 
   const renderTooltip = (aircraft) => {
     if (!hoveredSeat) return null;
-
+    const isBooked = isSeatBooked(hoveredSeat.seatNumber, activeSegmentIndex);
     return (
       <div
         className="absolute z-50 bg-gray-800 text-white p-2 rounded-lg text-sm shadow-lg"
@@ -93,8 +105,8 @@ const SeatMap = ({
         <div className="flex flex-col gap-1">
           <p>Seat: {hoveredSeat.seatNumber}</p>
           <p>Type: {hoveredSeat.type}</p>
-          <p>Status: {hoveredSeat.status}</p>
-          <p>Price: ₹{getSeatPrice(hoveredSeat, aircraft)}</p>
+          <p>Status: {isBooked ? "Booked" : hoveredSeat.status}</p>
+          {!isBooked && <p>Price: ₹{getSeatPrice(hoveredSeat, aircraft)}</p>}
         </div>
       </div>
     );
@@ -145,7 +157,10 @@ const SeatMap = ({
                   onClick={() => handleSeatClick(seat, index)}
                   onMouseEnter={(e) => handleMouseEnter(seat, e)}
                   onMouseLeave={() => setHoveredSeat(null)}
-                  disabled={seat.status === "occupied"}
+                  disabled={
+                    isSeatBooked(seat.seatNumber, index) ||
+                    seat.status === "occupied"
+                  }
                 >
                   {seat.seatNumber}
                 </button>

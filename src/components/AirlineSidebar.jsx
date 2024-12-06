@@ -9,6 +9,7 @@ import {
   User,
   LogOut,
   Menu,
+  Bell,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/userSlice";
@@ -83,7 +84,16 @@ const LayoutComponent = ({ children }) => {
             <Menu size={24} />
           </button>
           <h1 className="text-2xl font-bold text-gray-800">SkyScroll</h1>
+
+          {/* Bell Notification Icon */}
+          <button
+            onClick={() => console.log("button cliked")}
+            className="relative ml-auto"
+          >
+            <Bell size={24} className="text-gray-800" />
+          </button>
         </header>
+
         <main
           className={`flex-1 overflow-y-auto mt-16 p-6 ${
             isOpen ? "ml-64" : "ml-20"

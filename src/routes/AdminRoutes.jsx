@@ -14,8 +14,12 @@ const AirlineLoginDetails = React.lazy(() =>
 const UpdateAirport = React.lazy(() => import("../pages/Admin/UpdateAirport"));
 const Aircrafts = React.lazy(() => import("../pages/Admin/Aircrafts"));
 const Bookings = React.lazy(() => import("../pages/Admin/Bookings"));
-const FlightSchedules = React.lazy(()=>import("../pages/Admin/FlightSchedules"));
-
+const FlightSchedules = React.lazy(() =>
+  import("../pages/Admin/FlightSchedules")
+);
+const FlightTracking = React.lazy(() =>
+  import("../pages/Admin/FlightTracking")
+);
 
 const AdminRoutes = () => {
   return (
@@ -35,6 +39,7 @@ const AdminRoutes = () => {
           <Route path="aircrafts" element={<Aircrafts />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="flight-schedules" element={<FlightSchedules />} />
+          <Route path="flight-tracking" element={<FlightTracking />} />
         </Route>
       </Routes>
     </Suspense>

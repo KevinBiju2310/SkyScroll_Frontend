@@ -60,10 +60,7 @@ const FlightCard = ({ trip }) => {
                   <div className="w-16 h-[2px] bg-gray-300"></div>
                 </div>
                 <p className="text-xs text-gray-500">
-                  {calculateDuration(
-                    segment.departureTime,
-                    segment.arrivalTime
-                  )}
+                  {segment.duration}
                 </p>
               </div>
 
@@ -117,15 +114,15 @@ const formatTime = (dateString) => {
   });
 };
 
-const calculateDuration = (departureTime, arrivalTime) => {
-  const dep = new Date(departureTime);
-  const arr = new Date(arrivalTime);
-  const diff = Math.abs(arr - dep); // in ms
+// const calculateDuration = (departureTime, arrivalTime) => {
+//   const dep = new Date(departureTime);
+//   const arr = new Date(arrivalTime);
+//   const diff = Math.abs(arr - dep); // in ms
 
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
-};
+//   const hours = Math.floor(diff / (1000 * 60 * 60));
+//   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+//   return `${hours}h ${minutes}m`;
+// };
 
 const FlightSchedules = () => {
   const [trips, setTrips] = useState([]);

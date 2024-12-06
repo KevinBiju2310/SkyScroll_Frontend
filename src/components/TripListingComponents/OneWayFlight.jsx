@@ -17,17 +17,19 @@ const OneWayFlight = ({
 }) => {
   const [showDetails, setShowDetails] = useState(false);
 
-  const formatTime = (time) =>
-    new Date(time).toLocaleTimeString("en-US", {
+  const formatTime = (time, timeZone) =>
+    new Intl.DateTimeFormat("en-US", {
       hour: "2-digit",
       minute: "2-digit",
-    });
+      timeZone,
+    }).format(new Date(time));
 
-  const formatDate = (date) =>
-    new Date(date).toLocaleDateString("en-US", {
+  const formatDate = (date, timeZone) =>
+    new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
-    });
+      timeZone,
+    }).format(new Date(date));
 
   const calculateDuration = (departure, arrival) => {
     const duration = (new Date(arrival) - new Date(departure)) / (1000 * 60);
@@ -81,13 +83,19 @@ const OneWayFlight = ({
               {/* Departure */}
               <div className="text-center min-w-[100px]">
                 <p className="text-xl font-semibold text-gray-800">
-                  {formatTime(flight.segments[0].departureTime)}
+                  {formatTime(
+                    flight.segments[0].departureTime,
+                    flight.segments[0].departureAirport.timeZone
+                  )}
                 </p>
                 <p className="text-sm font-medium text-gray-600">
                   {flight.segments[0].departureAirport.code}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {formatDate(flight.segments[0].departureTime)}
+                  {formatDate(
+                    flight.segments[0].departureTime,
+                    flight.segments[0].departureAirport.timeZone
+                  )}
                 </p>
               </div>
 
@@ -99,7 +107,7 @@ const OneWayFlight = ({
                   <div className="w-16 h-[2px] bg-gray-300"></div>
                 </div>
                 <p className="text-xs text-gray-500">
-                  {getTotalDuration(flight.segments)}
+                  {flight.segments[0].duration}
                 </p>
                 <p className="text-xs text-blue-600">
                   {getStopsText(flight.segments)}
@@ -110,7 +118,9 @@ const OneWayFlight = ({
               <div className="text-center min-w-[100px]">
                 <p className="text-xl font-semibold text-gray-800">
                   {formatTime(
-                    flight.segments[flight.segments.length - 1].arrivalTime
+                    flight.segments[flight.segments.length - 1].arrivalTime,
+                    flight.segments[flight.segments.length - 1].arrivalAirport
+                      .timezone
                   )}
                 </p>
                 <p className="text-sm font-medium text-gray-600">
@@ -121,7 +131,9 @@ const OneWayFlight = ({
                 </p>
                 <p className="text-xs text-gray-500">
                   {formatDate(
-                    flight.segments[flight.segments.length - 1].arrivalTime
+                    flight.segments[flight.segments.length - 1].arrivalTime,
+                    flight.segments[flight.segments.length - 1].arrivalAirport
+                      .timezone
                   )}
                 </p>
               </div>
@@ -205,10 +217,16 @@ const OneWayFlight = ({
                       <Clock className="w-5 h-5 text-gray-500" />
                       <div>
                         <p className="font-medium text-gray-700">
-                          {formatTime(flight.segments[0].departureTime)}
+                          {formatTime(
+                            flight.segments[0].departureTime,
+                            flight.segments[0].departureAirport.timeZone
+                          )}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {formatDate(flight.segments[0].departureTime)}
+                          {formatDate(
+                            flight.segments[0].departureTime,
+                            flight.segments[0].departureAirport.timeZone
+                          )}
                         </p>
                       </div>
                     </div>
@@ -248,10 +266,20 @@ const OneWayFlight = ({
                       <Clock className="w-5 h-5 text-gray-500" />
                       <div>
                         <p className="font-medium text-gray-700">
-                          {formatTime(flight.segments[0].arrivalTime)}
+                          {formatTime(
+                            flight.segments[flight.segments.length - 1]
+                              .arrivalTime,
+                            flight.segments[flight.segments.length - 1]
+                              .arrivalAirport.timezone
+                          )}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {formatDate(flight.segments[0].arrivalTime)}
+                          {formatDate(
+                            flight.segments[flight.segments.length - 1]
+                              .arrivalTime,
+                            flight.segments[flight.segments.length - 1]
+                              .arrivalAirport.timezone
+                          )}
                         </p>
                       </div>
                     </div>

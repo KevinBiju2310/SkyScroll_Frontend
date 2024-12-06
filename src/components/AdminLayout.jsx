@@ -7,6 +7,7 @@ import {
   LogOut,
   Calendar,
   Clock,
+  Navigation,
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -25,6 +26,11 @@ const Sidebar = () => {
     { name: "Flight Schedules", icon: Clock, path: "/admin/flight-schedules" },
     { name: "Airports", icon: MapPin, path: "/admin/airports" },
     { name: "Bookings", icon: Calendar, path: "/admin/bookings" },
+    {
+      name: "Flight Tracking",
+      icon: Navigation,
+      path: "/admin/flight-tracking",
+    },
   ];
 
   const handleNavigation = (path) => {

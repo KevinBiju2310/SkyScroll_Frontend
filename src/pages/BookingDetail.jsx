@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
 import {
   Plane,
-  Calendar,
   Send,
   Download,
   Users,
@@ -23,6 +22,7 @@ import { updateBookingStatus } from "../redux/bookingSlice";
 
 const BookingDetail = () => {
   const { id } = useParams();
+  const user = useSelector((state) => state.user.user);
   const bookings = useSelector((state) => state.bookings.bookings);
   const booking = bookings.find((b) => b._id === id);
 
@@ -82,7 +82,7 @@ const BookingDetail = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.put(`/cancelbooking/${id}`);
-      dispatch(updateBookingStatus(response.data.response)); // Update Redux store
+      dispatch(updateBookingStatus(response.data.response));
       // console.log("Booking cancelled:", response.data.response);
     } catch (error) {
       console.error("Error cancelling booking:", error);
@@ -98,6 +98,7 @@ const BookingDetail = () => {
   // Open chat sidebar
   const openChatSidebar = () => {
     setSelectedAirline({
+      _id: booking.flightId.airline?._id,
       airlineName: booking.flightId.airline?.airlineName || "Airline Support",
       profilepic: booking.flightId.airline?.profilepic || "",
     });
@@ -271,13 +272,15 @@ const BookingDetail = () => {
               </div>
 
               {/* Cancel Booking Button */}
-              <button
-                onClick={handleCancelBooking}
-                className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-                disabled={loading || booking.bookingStatus === "CANCELLED"}
-              >
-                <span>{loading ? "Processing..." : "Cancel Booking"}</span>
-              </button>
+              {booking.bookingStatus !== "CANCELLED" && (
+                <button
+                  onClick={handleCancelBooking}
+                  className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                  disabled={loading}
+                >
+                  <span>{loading ? "Processing..." : "Cancel Booking"}</span>
+                </button>
+              )}
             </div>
             <p className="text-sm text-gray-600 mt-2">
               Our support team is ready to assist you with any questions about
@@ -291,6 +294,7 @@ const BookingDetail = () => {
         selectedAirline={selectedAirline}
         isSidebarOpen={isChatSidebarOpen}
         closeSidebar={() => setIsChatSidebarOpen(false)}
+        currentUser={user._id}
       />
       <ConfirmationModal
         isOpen={isModalOpen}

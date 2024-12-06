@@ -15,15 +15,6 @@ import { useEffect, useState } from "react";
 import StatsCard from "../../components/StatsCard";
 import axiosInstance from "../../config/axiosInstance";
 
-const mockData = [
-  { month: "Jan", airlines: 45, users: 2400, airports: 30, revenue: 24000 },
-  { month: "Feb", airlines: 47, users: 2600, airports: 32, revenue: 28000 },
-  { month: "Mar", airlines: 48, users: 2900, airports: 32, revenue: 26000 },
-  { month: "Apr", airlines: 51, users: 3100, airports: 35, revenue: 32000 },
-  { month: "May", airlines: 53, users: 3400, airports: 36, revenue: 36000 },
-  { month: "Jun", airlines: 54, users: 3700, airports: 38, revenue: 40000 },
-];
-
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalAirlines: 0,

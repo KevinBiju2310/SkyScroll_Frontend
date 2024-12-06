@@ -9,12 +9,14 @@ import {
   User,
   Settings,
   DoorOpen,
+  Bell,
 } from "lucide-react";
 import RegisterForm from "../pages/RegisterForm";
 import LoginForm from "../pages/LoginForm";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../src/redux/userSlice";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+// import io from "socket.io-client";
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -23,7 +25,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
-  console.log(user);
+
   const openRegisterPopup = () => {
     setPopupContent("register");
     setIsPopupOpen(true);
@@ -66,6 +68,19 @@ const Header = () => {
     if (user) {
       return (
         <div className="flex items-center space-x-4">
+          <div className="relative">
+            <button
+              // onClick={toggleNotifications}
+              className="text-white hover:text-gray-200"
+            >
+              <Bell size={24} />
+              {/* {notifications.length > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1">
+                  {notifications.length}
+                </span>
+              )} */}
+            </button>
+          </div>
           <button
             onClick={() => navigate("/profile")}
             className="bg-purple-500 text-white px-4 py-2 rounded-full hover:bg-purple-600 transition duration-300 flex items-center"
@@ -114,29 +129,26 @@ const Header = () => {
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                 <Plane className="text-sky-600" size={24} />
               </div>
-              <span className="font-semibold text-xl">SkyScroll</span>
+              <span className="font-semibold text-xl">
+                {" "}
+                <Link to="/">SkyScroll</Link>
+              </span>
             </div>
 
             {/* Navigation Links (hidden on mobile) */}
             <nav className="hidden md:flex space-x-6">
-              <a
-                href="#"
+              <Link
+                to="/"
                 className="hover:text-sky-100 transition duration-300"
               >
                 Home
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                to="/about-us"
                 className="hover:text-sky-100 transition duration-300"
               >
-                Flights
-              </a>
-              <a
-                href="#"
-                className="hover:text-sky-100 transition duration-300"
-              >
-                Deals
-              </a>
+                About Us
+              </Link>
             </nav>
 
             {/* Auth Buttons */}

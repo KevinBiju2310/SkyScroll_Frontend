@@ -30,7 +30,6 @@ const Chats = () => {
 
   return (
     <div className="relative">
-      {/* Blur and darken background when sidebar is open */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"

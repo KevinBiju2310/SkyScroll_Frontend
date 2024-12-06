@@ -124,7 +124,7 @@ const AddTrips = () => {
     e.preventDefault();
     try {
       await axiosInstance.post("/airline/add-trips", tripData);
-      // navigate("/airline/trips");
+      navigate("/airline/trips");
     } catch (error) {
       console.error("Error submitting form:", error);
     }

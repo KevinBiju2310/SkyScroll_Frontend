@@ -45,10 +45,18 @@ const PersonalInformation = () => {
       setPassportDetails({
         firstName: user.passportDetails.firstName || "",
         lastName: user.passportDetails.lastName || "",
-        dateOfBirth: user.passportDetails.dateOfBirth || "",
+        dateOfBirth: user.passportDetails.dateOfBirth
+          ? new Date(user.passportDetails.dateOfBirth)
+              .toISOString()
+              .split("T")[0]
+          : "",
         nationality: user.passportDetails.nationality || "",
         passportNumber: user.passportDetails.passportNumber || "",
-        expiryDate: user.passportDetails.expiryDate || "",
+        expiryDate: user.passportDetails.expiryDate
+          ? new Date(user.passportDetails.expiryDate)
+              .toISOString()
+              .split("T")[0]
+          : "",
       });
     }
   }, [user]);

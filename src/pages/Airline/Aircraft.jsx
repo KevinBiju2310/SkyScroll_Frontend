@@ -7,9 +7,9 @@ import Popup from "../../components/PopUp";
 
 const Aircraft = () => {
   const [aircrafts, setAircrafts] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [aircraftIdToDelete, setAircraftIdToDelete] = useState(null);
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup state
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedAircraft, setSelectedAircraft] = useState(null);
   const navigate = useNavigate();
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../config/axiosInstance";
 import { AdminLayout } from "../../components/AdminLayout";
-import Popup from "../../components/Popup";
+import Popup from "../../components/PopUp";
 
 const Aircrafts = () => {
   const [aircrafts, setAircrafts] = useState([]);

@@ -16,13 +16,23 @@ import {
 import axiosInstance from "../../config/axiosInstance";
 import AirlineLayout from "../../components/AirlineSidebar";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import Popup from "../../components/PopUp";
+import { DateTime } from "luxon";
 
 const Trips = () => {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
+  const [tripToEdit, setTripToEdit] = useState(null);
+  const [editData, setEditData] = useState({
+    arrivalTime: "",
+    departureTime: "",
+    status: "",
+    ticketPrices: {},
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,13 +55,72 @@ const Trips = () => {
     navigate("/airline/trips/addtrip");
   };
 
-  const handleEditTrip = (tripId) => {
-    navigate(`/airline/trips/edit/${tripId}`);
+  const convertToTimezone = (dateStr, timezone) => {
+    return DateTime.fromISO(dateStr, { zone: "utc" })
+      .setZone(timezone) // Convert from UTC to the airport's timezone
+      .toFormat("yyyy-MM-dd'T'HH:mm"); // Format it for input type datetime-local
+  };
+
+  const handleEditTrip = (trip) => {
+    setTripToEdit(trip);
+    const segment = trip.segments[0] || {};
+
+    // Convert times to the airport's timezone
+    const departureTimeFormatted = convertToTimezone(
+      segment.departureTime,
+      segment.departureAirport?.timezone || "UTC"
+    );
+    const arrivalTimeFormatted = convertToTimezone(
+      segment.arrivalTime,
+      segment.arrivalAirport?.timezone || "UTC"
+    );
+
+    setEditData({
+      departureTime: departureTimeFormatted,
+      arrivalTime: arrivalTimeFormatted,
+      status: segment.status || "",
+      ticketPrices: trip.ticketPrices || {},
+    });
+    setEditModalOpen(true);
   };
 
   const confirmDeleteTrip = (tripId) => {
     setTripToDelete(tripId);
     setDeleteModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const updatedTrip = {
+        ...tripToEdit,
+        segments: [
+          {
+            ...tripToEdit.segments[0],
+            arrivalTime: editData.arrivalTime,
+            departureTime: editData.departureTime,
+            status: editData.status,
+          },
+        ],
+        ticketPrices: editData.ticketPrices,
+      };
+
+      const response = await axiosInstance.put(
+        `/airline/edit-trip/${tripToEdit._id}`,
+        updatedTrip
+      );
+
+      setTrips((prevTrips) =>
+        prevTrips.map((trip) =>
+          trip._id === tripToEdit._id ? response.data.response : trip
+        )
+      );
+
+      setEditModalOpen(false);
+      setTripToEdit(null);
+    } catch (err) {
+      console.error("Error updating trip:", err);
+      alert("Failed to save changes");
+    }
   };
 
   const handleDeleteTrip = async () => {
@@ -63,15 +132,25 @@ const Trips = () => {
         setTripToDelete(null);
       } catch (err) {
         console.error("Error deleting trip:", err);
-        alert("Failed to delete trip"); 
+        alert("Failed to delete trip");
       }
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditModalOpen(false);
+    setTripToEdit(null);
   };
 
   const handleCancelDelete = () => {
     setDeleteModalOpen(false);
     setTripToDelete(null);
   };
+
+  const displayDate = (dateStr, timezone) =>
+    DateTime.fromISO(dateStr, { zone: "utc" })
+      .setZone(timezone)
+      .toLocaleString(DateTime.DATETIME_MED);
 
   if (loading) {
     return (
@@ -128,7 +207,7 @@ const Trips = () => {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleEditTrip(trip._id)}
+                      onClick={() => handleEditTrip(trip)}
                       className="p-2 text-gray-600 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                     >
                       <Edit2 className="w-5 h-5" />
@@ -163,13 +242,10 @@ const Trips = () => {
                           </p>
                           <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                             <Calendar className="w-4 h-4" />
-                            {new Date(
-                              segment.departureTime
-                            ).toLocaleDateString()}
-                            <Clock className="w-4 h-4 ml-2" />
-                            {new Date(
-                              segment.departureTime
-                            ).toLocaleTimeString()}
+                            {displayDate(
+                              segment.departureTime,
+                              segment.departureAirport?.timezone || "UTC"
+                            )}
                           </div>
                           <div className="flex items-center gap-2 mt-1 text-sm">
                             <Building2 className="w-4 h-4" />
@@ -188,9 +264,10 @@ const Trips = () => {
                           </p>
                           <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                             <Calendar className="w-4 h-4" />
-                            {new Date(segment.arrivalTime).toLocaleDateString()}
-                            <Clock className="w-4 h-4 ml-2" />
-                            {new Date(segment.arrivalTime).toLocaleTimeString()}
+                            {displayDate(
+                              segment.arrivalTime,
+                              segment.arrivalAirport?.timezone || "UTC"
+                            )}
                           </div>
                           <div className="flex items-center gap-2 mt-1 text-sm">
                             <Building2 className="w-4 h-4" />
@@ -243,6 +320,94 @@ const Trips = () => {
             </div>
           ))}
         </div>
+
+        <Popup isOpen={editModalOpen} onClose={handleCancelEdit}>
+          <h3 className="text-xl font-semibold mb-4">Edit Trip</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium">Arrival Time</label>
+              <input
+                type="datetime-local"
+                className="w-full px-3 py-2 border rounded"
+                value={editData.arrivalTime}
+                onChange={(e) =>
+                  setEditData({ ...editData, arrivalTime: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">
+                Departure Time
+              </label>
+              <input
+                type="datetime-local"
+                className="w-full px-3 py-2 border rounded"
+                value={editData.departureTime}
+                onChange={(e) =>
+                  setEditData({ ...editData, departureTime: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Status</label>
+              <select
+                className="w-full px-3 py-2 border rounded"
+                value={editData.status}
+                onChange={(e) =>
+                  setEditData({ ...editData, status: e.target.value })
+                }
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="ontime">On Time</option>
+                <option value="delayed">Delayed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="boarding">Boarding</option>
+                <option value="inair">In Air</option>
+                <option value="landed">Landed</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Ticket Prices</label>
+              <div className="space-y-2">
+                {Object.entries(editData.ticketPrices).map(
+                  ([classType, price]) => (
+                    <div key={classType} className="flex items-center gap-4">
+                      <span className="w-1/4">{classType}</span>
+                      <input
+                        type="number"
+                        className="w-3/4 px-3 py-2 border rounded"
+                        value={price}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            ticketPrices: {
+                              ...editData.ticketPrices,
+                              [classType]: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              onClick={handleCancelEdit}
+              className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveEdit}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Save Changes
+            </button>
+          </div>
+        </Popup>
 
         <ConfirmationModal
           isOpen={deleteModalOpen}

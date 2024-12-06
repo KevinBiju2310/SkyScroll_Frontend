@@ -18,7 +18,7 @@ const UpdateAircraft = React.lazy(() =>
   import("../pages/Airline/UpdateAircraft")
 );
 const Bookings = React.lazy(() => import("../pages/Airline/Bookings"));
-const Messages = React.lazy(()=>import("../pages/Airline/Messages"));
+const Messages = React.lazy(() => import("../pages/Airline/Messages"));
 
 const UserRoutes = () => {
   return (
@@ -42,7 +42,7 @@ const UserRoutes = () => {
           <Route path="trips" element={<Trips />} />
           <Route path="trips/addtrip" element={<AddTrip />} />
           <Route path="bookings" element={<Bookings />} />
-          <Route path="messages" element={<Messages />}/>
+          <Route path="messages" element={<Messages />} />
         </Route>
       </Routes>
     </Suspense>

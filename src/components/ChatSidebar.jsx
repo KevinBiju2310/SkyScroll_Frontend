@@ -1,6 +1,13 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState, useRef } from "react";
-import { ChevronRight, Send, Loader2, MessageSquare } from "lucide-react";
+import {
+  ChevronRight,
+  Send,
+  Loader2,
+  MessageSquare,
+  Check,
+  CheckCheck,
+} from "lucide-react";
 import io from "socket.io-client";
 import axiosInstance from "../config/axiosInstance";
 
@@ -12,7 +19,7 @@ const ChatSidebar = ({
 }) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  // const [socket, setSocket] = useState(null);
+  const [isOnline, setIsOnline] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
@@ -38,12 +45,32 @@ const ChatSidebar = ({
     newSocket.on("connect", () => {
       console.log("Socket connected");
       newSocket.emit("join", currentUser);
+
+      if (selectedAirline?._id) {
+        newSocket.emit("checkOnlineStatus", selectedAirline?._id);
+      }
     });
 
     newSocket.on("messageReceived", (newMessage) => {
       console.log("New message received:", newMessage);
       setMessages((prevMessages) => [...prevMessages, newMessage]);
+      if (isSidebarOpen && newMessage.sender === selectedAirline._id) {
+        newSocket.emit("markMessagesAsSeen", {
+          conversationId: selectedAirline._id,
+          userId: currentUser,
+        });
+      }
       scrollToBottom();
+    });
+
+    newSocket.on("messagesSeen", ({ by }) => {
+      if (by === selectedAirline._id) {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.sender === currentUser ? { ...msg, seen: true } : msg
+          )
+        );
+      }
     });
 
     newSocket.on("messageError", (error) => {
@@ -70,13 +97,40 @@ const ChatSidebar = ({
       fetchPreviousMessages();
     }
 
+    newSocket.on("onlineStatus", ({ userId, isOnline: status }) => {
+      if (selectedAirline?._id === userId) {
+        setIsOnline(status);
+      }
+    });
+
+    newSocket.on("userOnline", (userId) => {
+      if (selectedAirline?._id === userId) {
+        setIsOnline(true);
+      }
+    });
+
+    newSocket.on("userOffline", (userId) => {
+      if (selectedAirline?._id === userId) {
+        setIsOnline(false);
+      }
+    });
+
     // Cleanup
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
     };
-  }, [selectedAirline?._id, currentUser]);
+  }, [selectedAirline?._id, currentUser, isSidebarOpen]);
+
+  useEffect(() => {
+    if (isSidebarOpen && selectedAirline?._id && socketRef.current) {
+      socketRef.current.emit("markMessagesAsSeen", {
+        conversationId: selectedAirline._id,
+        userId: currentUser,
+      });
+    }
+  }, [isSidebarOpen, selectedAirline?._id, currentUser]);
 
   // Format timestamp
   const formatMessageTime = (timestamp) => {
@@ -101,7 +155,7 @@ const ChatSidebar = ({
     try {
       console.log("Sending message:", messageData);
       socketRef.current.emit("sendMessage", messageData);
-      setMessage(""); // Clear input immediately after sending
+      setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -142,6 +196,43 @@ const ChatSidebar = ({
     );
   };
 
+  const renderMessage = (msg, idx) => (
+    <div
+      key={idx}
+      className={`flex ${
+        msg.sender === currentUser ? "justify-end" : "justify-start"
+      } mb-4`}
+    >
+      <div
+        className={`max-w-[70%] ${
+          msg.sender === currentUser
+            ? "bg-blue-500 text-white rounded-t-2xl rounded-bl-2xl"
+            : "bg-white text-gray-800 rounded-t-2xl rounded-br-2xl border"
+        } p-4 shadow-sm relative group hover:shadow-md transition-shadow`}
+      >
+        <p className="break-words">{msg.text}</p>
+        <div className="flex items-center justify-end gap-1 mt-1">
+          <span
+            className={`text-xs ${
+              msg.sender === currentUser ? "text-blue-100" : "text-gray-400"
+            }`}
+          >
+            {formatMessageTime(msg.timestamp)}
+          </span>
+          {msg.sender === currentUser && (
+            <>
+              {msg.seen ? (
+                <CheckCheck className="w-5 h-5 text-yellow-900 font-extrabold" />
+              ) : (
+                <Check className="w-5 h-5 text-blue-300 font-extrabold" />
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div
       className={`fixed top-0 right-0 w-[500px] h-full bg-white shadow-2xl transform transition-transform duration-400 ease-in-out ${
@@ -170,13 +261,21 @@ const ChatSidebar = ({
                     : ""}
                 </div>
               )}
+              <div
+                className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
+                  isOnline ? "bg-green-500" : "bg-gray-400"
+                }`}
+              />
             </div>
           )}
           <div>
             <h3 className="text-2xl font-bold text-white">
               {selectedAirline?.airlineName || selectedAirline?.username}
             </h3>
-            <p className="text-blue-100 text-sm">Online</p>
+            <p className="text-blue-100 text-sm">
+              <span className={`w-2 h-2`} />
+              {isOnline ? "Online" : "Offline"}
+            </p>
           </div>
         </div>
         <button
@@ -208,35 +307,7 @@ const ChatSidebar = ({
             ([date, dateMessages]) => (
               <div key={date}>
                 {renderDateDivider(date)}
-                {dateMessages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex ${
-                      msg.sender === currentUser
-                        ? "justify-end"
-                        : "justify-start"
-                    } mb-4`}
-                  >
-                    <div
-                      className={`max-w-[70%] ${
-                        msg.sender === currentUser
-                          ? "bg-blue-500 text-white rounded-t-2xl rounded-bl-2xl"
-                          : "bg-white text-gray-800 rounded-t-2xl rounded-br-2xl border"
-                      } p-4 shadow-sm relative group hover:shadow-md transition-shadow`}
-                    >
-                      <p className="break-words">{msg.text}</p>
-                      <span
-                        className={`text-xs ${
-                          msg.sender === currentUser
-                            ? "text-blue-100"
-                            : "text-gray-400"
-                        } block mt-1`}
-                      >
-                        {formatMessageTime(msg.timestamp)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                {dateMessages.map((msg, idx) => renderMessage(msg, idx))}
               </div>
             )
           )

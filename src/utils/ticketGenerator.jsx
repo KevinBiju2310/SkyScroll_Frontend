@@ -50,23 +50,15 @@ const ticketGenerator = async (booking) => {
   try {
     // Header
     doc.setFillColor(0, 87, 168);
-    doc.rect(0, 0, pageWidth, 25, "F");
+    doc.rect(0, 0, pageWidth, 20, "F");
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.setFont(undefined, "bold");
-    centerText("BOARDING PASS", 12);
-
-    doc.setFontSize(14);
-    centerText(booking.flightId.airline?.airlineName || "Airline", 20);
-
-    // Main ticket border
-    doc.setDrawColor(0, 87, 168);
-    doc.setLineWidth(1);
-    doc.rect(10, 30, pageWidth - 20, pageHeight - 40);
+    centerText("FLIGHT TICKET", 12);
 
     // Flight Details Section
-    let currentY = 40;
+    let currentY = 25;
     drawSection(currentY, currentY + 25, "Flight Details");
 
     const leftCol = 25;
@@ -104,18 +96,6 @@ const ticketGenerator = async (booking) => {
       rightCol + 20,
       currentY
     );
-
-    // Seats Section
-    currentY += 15;
-    drawSection(currentY, currentY + 15, "Seats");
-    currentY += 10;
-    doc.setFont(undefined, "bold");
-    doc.text("Assigned:", leftCol, currentY);
-    doc.setFont(undefined, "normal");
-    const seatAssignments = Array.from(booking.selectedSeats || [])
-      .map(([key, value]) => `${key}: ${value.join(", ")}`)
-      .join(" | ");
-    doc.text(seatAssignments || "No seats assigned", leftCol + 25, currentY);
 
     // Passenger Details Section
     currentY += 15;
@@ -159,9 +139,9 @@ const ticketGenerator = async (booking) => {
       currentY
     );
 
-    // Booking Information
+    // Booking Information Section
     currentY += 15;
-    drawSection(currentY, currentY + 25, "Booking Information");
+    drawSection(currentY, currentY + 20, "Booking Information");
 
     currentY += 10;
     doc.setFont(undefined, "bold");
@@ -172,9 +152,10 @@ const ticketGenerator = async (booking) => {
     doc.text(formatDate(booking.bookingDate), leftCol + 20, currentY);
     doc.text(booking.bookingStatus, rightCol + 20, currentY);
 
-    currentY += 8;
+    // Payment Section
+    currentY += 10;
     doc.setFont(undefined, "bold");
-    doc.text("Payment:", leftCol, currentY);
+    doc.text("Payment Status:", leftCol, currentY);
 
     const statusColors = {
       SUCCESS: [0, 128, 0],
@@ -183,15 +164,12 @@ const ticketGenerator = async (booking) => {
     };
     const statusColor = statusColors[booking.paymentStatus] || [0, 0, 0];
     doc.setTextColor(...statusColor);
-    doc.setFont(undefined, "normal");
-    doc.text(booking.paymentStatus, leftCol + 25, currentY);
+    doc.text(booking.paymentStatus, leftCol + 40, currentY);
     doc.setTextColor(0, 0, 0);
 
-    // Total amount
-    doc.setFillColor(0, 87, 168);
-    doc.setTextColor(255, 255, 255);
-    doc.rect(rightCol - 5, currentY - 5, 70, 8, "F");
-    doc.text(`Total: INR ${booking.totalAmount}`, rightCol, currentY);
+    currentY += 5;
+    doc.setFont(undefined, "bold");
+    doc.text(`Total Amount: INR ${booking.totalAmount}`, leftCol, currentY + 5);
 
     // QR Code
     const qrData = await QRCode.toDataURL(
@@ -201,11 +179,11 @@ const ticketGenerator = async (booking) => {
         passengers: booking.passengers.map((p) => p.fullName),
       })
     );
-    doc.addImage(qrData, "PNG", pageWidth - 50, currentY - 30, 30, 30);
+    doc.addImage(qrData, "PNG", pageWidth - 50, currentY - 1, 30, 30);
 
     // Footer
     doc.setFillColor(0, 87, 168);
-    doc.rect(0, pageHeight - 12, pageWidth, 12, "F");
+    doc.rect(0, pageHeight - 10, pageWidth, 10, "F");
     doc.setFontSize(8);
     doc.setTextColor(255, 255, 255);
     centerText(

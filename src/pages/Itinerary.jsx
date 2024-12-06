@@ -16,6 +16,7 @@ const Itinerary = () => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [flightDetails, setFlightDetails] = useState(null);
+  const [bookedSeats, setBookedSeats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState({});
@@ -45,8 +46,8 @@ const Itinerary = () => {
     const fetchFlightDetails = async () => {
       try {
         const response = await axiosInstance.get(`/flight/${flightId}`);
-        console.log(response);
-        setFlightDetails(response.data.response);
+        setFlightDetails(response.data.response.flightDetails);
+        setBookedSeats(response.data.response.bookedSeats);
       } catch (err) {
         setError("Failed to fetch flight details");
       } finally {
@@ -247,7 +248,9 @@ const Itinerary = () => {
         flightDetails={flightDetails}
         travelClass={travelClass}
         selectedSeats={selectedSeats}
+        bookedSeats={bookedSeats}
         onSeatSelect={(seatNumber, segmentIndex) => {
+          console.log(seatNumber, segmentIndex);
           setSelectedSeats((prevSelectedSeats) => {
             const segmentSeats = prevSelectedSeats[segmentIndex] || [];
             if (segmentSeats.includes(seatNumber)) {
