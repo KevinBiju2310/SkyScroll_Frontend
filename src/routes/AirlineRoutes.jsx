@@ -24,7 +24,7 @@ const UserRoutes = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        <Route path="" element={<LogIn />} />
+        <Route path="/" element={<LogIn />} />
         <Route path="register" element={<RegistrationForm />} />
         <Route element={<ProtectedRoute airlineOnly />}>
           <Route path="dashboard" element={<Dashboard />} />

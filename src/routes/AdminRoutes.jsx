@@ -25,7 +25,7 @@ const AdminRoutes = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        <Route path="" element={<AdminLogin />} />
+        <Route path="/" element={<AdminLogin />} />
         <Route element={<ProtectedRoute adminOnly />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminGetUsers />} />
