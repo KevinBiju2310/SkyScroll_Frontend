@@ -1,4 +1,4 @@
-import Faq from "../components/HomePageComponents/FAQ";
+import Faq from "../components/HomePageComponents/Faq";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import HeroSection from "../components/HomePageComponents/HeroSection";
