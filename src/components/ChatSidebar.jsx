@@ -35,7 +35,7 @@ const ChatSidebar = ({
 
   useEffect(() => {
     // Initialize socket connection
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io("https://skyscroll-backend.onrender.com", {
       withCredentials: true,
     });
 
