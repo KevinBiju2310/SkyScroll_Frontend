@@ -3,7 +3,7 @@ import store from "../redux/store";
 import { logout, updateUserProfile } from "../redux/userSlice";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://skyscroll-backend.onrender.com",
   withCredentials: true,
 });
 
