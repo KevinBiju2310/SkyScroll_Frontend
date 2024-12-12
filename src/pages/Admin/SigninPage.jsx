@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -12,7 +12,7 @@ import {
   Snackbar,
 } from "@mui/material";
 import { Visibility, VisibilityOff, Login } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../config/axiosInstance";
@@ -21,6 +21,7 @@ const AdminSignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const admin = useSelector((state) => state.user.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -61,7 +62,6 @@ const AdminSignIn = () => {
         password,
       });
       const admin = response.data.data;
-      console.log(admin, "siginin page");
       setSnackbar({
         open: true,
         message: "Successfull Signin",
@@ -74,7 +74,7 @@ const AdminSignIn = () => {
       setEmail("");
 
       setTimeout(() => {
-        navigate("/admin/dashboard");
+        navigate("/admin/dashboard", { replace: true });
       }, 1000);
     } catch (error) {
       console.error("Error Occured: ", error);
@@ -88,8 +88,13 @@ const AdminSignIn = () => {
         isError: true,
       });
     }
-    console.log("Sign in attempt with:", { email, password });
   };
+
+  useEffect(() => {
+    if (admin) {
+      navigate("/admin/dashboard");
+    }
+  }, [admin, navigate]);
 
   return (
     <Box

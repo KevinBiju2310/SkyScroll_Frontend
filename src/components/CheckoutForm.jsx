@@ -33,7 +33,7 @@ const CheckoutForm = ({ bookingDetails }) => {
       },
       redirect: "if_required", // Avoid redirecting; handle it manually
     });
-    console.log(paymentIntent);
+    console.log(bookingDetails);
     if (error) {
       setErrorMessage(error.message);
       setLoading(false);

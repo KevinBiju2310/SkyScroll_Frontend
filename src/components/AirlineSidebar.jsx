@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Home,
   Plane,
@@ -14,6 +14,8 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
+import NotificationsDropdown from "./NotificationDropdown";
+import io from "socket.io-client";
 
 const LayoutComponent = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +23,9 @@ const LayoutComponent = ({ children }) => {
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.user);
   const profilePic = user?.profilepic;
+  const [socket, setSocket] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const sidebarItems = [
     { icon: Home, label: "Dashboard", path: "/airline/dashboard" },
@@ -30,6 +35,56 @@ const LayoutComponent = ({ children }) => {
     { icon: Map, label: "Trip Details", path: "/airline/trips" },
     { icon: User, label: "Profile", path: "/airline/profile" },
   ];
+
+  useEffect(() => {
+    if (user) {
+      const newSocket = io("http://localhost:5000", {
+        withCredentials: true,
+      });
+
+      setSocket(newSocket);
+
+      newSocket.on("connect", () => {
+        console.log("Connected to socket server");
+        newSocket.emit("join", user._id);
+      });
+
+      return () => {
+        if (newSocket) newSocket.close();
+      };
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("newNotification", () => {
+        setNotificationCount((prev) => prev + 1);
+      });
+
+      socket.on("notificationRead", () => {
+        setNotificationCount((prev) => Math.max(0, prev - 1));
+      });
+
+      socket.on("notificationsCleared", () => {
+        setNotificationCount(0);
+      });
+
+      socket.on("unreadNotifications", (notifications) => {
+        setNotificationCount(notifications.length);
+      });
+
+      return () => {
+        socket.off("newNotification");
+        socket.off("notificationRead");
+        socket.off("notificationsCleared");
+        socket.off("unreadNotifications");
+      };
+    }
+  }, [socket]);
+
+  const toggleNotifications = () => {
+    setIsNotificationsOpen(!isNotificationsOpen);
+  };
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
@@ -86,12 +141,22 @@ const LayoutComponent = ({ children }) => {
           <h1 className="text-2xl font-bold text-gray-800">SkyScroll</h1>
 
           {/* Bell Notification Icon */}
-          <button
-            onClick={() => console.log("button cliked")}
-            className="relative ml-auto"
-          >
+          <button onClick={toggleNotifications} className="relative ml-auto">
             <Bell size={24} className="text-gray-800" />
+            {notificationCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
           </button>
+          {isNotificationsOpen && (
+            <NotificationsDropdown
+              socket={socket}
+              userId={user._id}
+              isOpen={isNotificationsOpen}
+              onClose={() => setIsNotificationsOpen(false)}
+            />
+          )}
         </header>
 
         <main

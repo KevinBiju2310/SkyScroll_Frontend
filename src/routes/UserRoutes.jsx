@@ -23,10 +23,10 @@ const UserRoutes = () => {
           <Route path="checkout" element={<Checkout />} />
           <Route path="booking-detail/:id" element={<Bookings />} />
           <Route path="payment-success" element={<SuccessPage />} />
+          <Route path="itinerary" element={<Iternery />} />
         </Route>
         <Route path="reset-password" element={<ResetPassword />} />
         <Route path="search-trip" element={<TripsListing />} />
-        <Route path="itinerary" element={<Iternery />} />
         <Route path="about-us" element={<AboutUs />} />
       </Routes>
     </Suspense>

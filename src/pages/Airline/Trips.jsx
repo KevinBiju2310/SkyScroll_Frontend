@@ -172,7 +172,7 @@ const Trips = () => {
         </div>
       </AirlineLayout>
     );
-  }
+  } 
 
   return (
     <AirlineLayout>
@@ -231,6 +231,12 @@ const Trips = () => {
                       <h4 className="font-semibold text-gray-700">
                         Flight {segment.flightNumber}
                       </h4>
+                      <div className="flex items-center gap-1 ml-4 text-gray-600">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">
+                          {segment.duration}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

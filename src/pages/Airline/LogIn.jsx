@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import background from "../../assets/background.jpg";
 import { useNavigate } from "react-router-dom";
 import { Snackbar } from "@mui/material";
 import axiosInstance from "../../config/axiosInstance";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../../redux/userSlice";
 
 const LogIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [forgotEmail, setForgotEmail] = useState(""); // For Forgot Password email
-  const [showForgotPassword, setShowForgotPassword] = useState(false); // Toggle Forgot Password Form
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const airline = useSelector((state) => state.user.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [snackbar, setSnackbar] = useState({
@@ -41,7 +42,7 @@ const LogIn = () => {
         message: "Login Successful",
         isError: false,
       });
-      navigate("/airline/dashboard");
+      navigate("/airline/dashboard", { replace: true });
     } catch (error) {
       const errorMessage =
         error?.response?.data?.error ||
@@ -83,6 +84,12 @@ const LogIn = () => {
       });
     }
   };
+
+  useEffect(() => {
+    if (airline) {
+      navigate("/airline/dashboard");
+    }
+  }, [airline, navigate]);
 
   return (
     <div

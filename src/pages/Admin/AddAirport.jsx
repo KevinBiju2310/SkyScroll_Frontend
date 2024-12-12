@@ -88,7 +88,6 @@ const AddAirport = () => {
       const airportName = parts[0];
       const city = parts[1] || "";
       const country = parts[parts.length - 1] || "";
-      console.log(e.result, "API Result");
 
       setAirport((prev) => ({
         ...prev,

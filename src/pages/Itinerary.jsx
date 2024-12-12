@@ -1,10 +1,19 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Plane, Users, Phone, CreditCard, PlaneTakeoff } from "lucide-react";
+import {
+  Plane,
+  Users,
+  Phone,
+  CreditCard,
+  PlaneTakeoff,
+  AlertTriangle,
+} from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import axiosInstance from "../config/axiosInstance";
 import SeatMap from "../components/SeatMap";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 const Itinerary = () => {
   const [searchParams] = useSearchParams();
@@ -20,6 +29,7 @@ const Itinerary = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState({});
+  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
   const [passengerDetails, setPassengerDetails] = useState(
     Array(adults + children)
       .fill({
@@ -38,6 +48,10 @@ const Itinerary = () => {
   const [contactInfo, setContactInfo] = useState({
     email: "",
     phoneNumber: "",
+  });
+  const [validationErrors, setValidationErrors] = useState({
+    passengers: [],
+    contact: {},
   });
   // const [clientSecret, setClientSecret] = useState("");
   // const [paymentProcessing, setPaymentProcessing] = useState(false);
@@ -73,13 +87,43 @@ const Itinerary = () => {
   //   fetchPassengerDetails();
   // }, []);
 
+  const handleSeatSelect = (seatNumber, segmentIndex) => {
+    setSelectedSeats((prevSelectedSeats) => {
+      const segmentSeats = prevSelectedSeats[segmentIndex] || [];
+      if (segmentSeats.includes(seatNumber)) {
+        return {
+          ...prevSelectedSeats,
+          [segmentIndex]: segmentSeats.filter((seat) => seat !== seatNumber),
+        };
+      } else {
+        if (segmentSeats.length < adults + children) {
+          return {
+            ...prevSelectedSeats,
+            [segmentIndex]: [...segmentSeats, seatNumber],
+          };
+        } else {
+          setSnackbar({
+            open: true,
+            message: `You can only select ${
+              adults + children
+            } seats for each flight`,
+          });
+          return prevSelectedSeats;
+        }
+      }
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const steps = [
     { number: 1, title: "Review Itinerary", icon: Plane },
     { number: 2, title: "Select Seats (Optional)", icon: Users },
     { number: 3, title: "Passenger Details", icon: Users },
     { number: 4, title: "Contact Information", icon: Phone },
   ];
-  console.log(flightDetails);
 
   const renderStepIndicator = () => (
     <div className="max-w-3xl mx-auto mb-8">
@@ -249,34 +293,7 @@ const Itinerary = () => {
         travelClass={travelClass}
         selectedSeats={selectedSeats}
         bookedSeats={bookedSeats}
-        onSeatSelect={(seatNumber, segmentIndex) => {
-          console.log(seatNumber, segmentIndex);
-          setSelectedSeats((prevSelectedSeats) => {
-            const segmentSeats = prevSelectedSeats[segmentIndex] || [];
-            if (segmentSeats.includes(seatNumber)) {
-              return {
-                ...prevSelectedSeats,
-                [segmentIndex]: segmentSeats.filter(
-                  (seat) => seat !== seatNumber
-                ),
-              };
-            } else {
-              if (segmentSeats.length < adults + children) {
-                return {
-                  ...prevSelectedSeats,
-                  [segmentIndex]: [...segmentSeats, seatNumber],
-                };
-              } else {
-                alert(
-                  `You can only select ${
-                    adults + children
-                  } seats for each flight`
-                );
-                return prevSelectedSeats;
-              }
-            }
-          });
-        }}
+        onSeatSelect={handleSeatSelect}
       />
 
       <div className="flex justify-between mt-6">
@@ -293,8 +310,60 @@ const Itinerary = () => {
           Confirm Seats
         </button> */}
       </div>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <MuiAlert
+          onClose={handleCloseSnackbar}
+          severity="warning"
+          elevation={6}
+          variant="filled"
+        >
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
     </div>
   );
+
+  const validatePassengerDetails = () => {
+    const errors = passengerDetails.map((passenger) => ({
+      fullName: !passenger.fullName.trim() ? "Full name is required" : "",
+      gender: !passenger.gender ? "Gender is required" : "",
+      nationality: !passenger.nationality.trim()
+        ? "Nationality is required"
+        : "",
+      dateOfBirth: !passenger.dateOfBirth ? "Date of birth is required" : "",
+      passportNumber: !passenger.passportNumber.trim()
+        ? "Passport number is required"
+        : "",
+    }));
+
+    setValidationErrors((prev) => ({ ...prev, passengers: errors }));
+    return errors.every((error) =>
+      Object.values(error).every((value) => value === "")
+    );
+  };
+
+  const validateContactInfo = () => {
+    const errors = {
+      email: !contactInfo.email.trim()
+        ? "Email is required"
+        : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactInfo.email)
+        ? "Invalid email format"
+        : "",
+      phoneNumber: !contactInfo.phoneNumber.trim()
+        ? "Phone number is required"
+        : !/^\d{10}$/.test(contactInfo.phoneNumber.replace(/\D/g, ""))
+        ? "Invalid phone number format (10 digits required)"
+        : "",
+    };
+
+    setValidationErrors((prev) => ({ ...prev, contact: errors }));
+    return Object.values(errors).every((error) => error === "");
+  };
 
   const renderPassengerDetails = () => (
     <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -322,6 +391,11 @@ const Itinerary = () => {
                   setPassengerDetails(newPassengers);
                 }}
               />
+              {validationErrors.passengers[index]?.fullName && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.passengers[index].fullName}
+                </p>
+              )}
             </div>
 
             <div>
@@ -345,6 +419,11 @@ const Itinerary = () => {
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
               </select>
+              {validationErrors.passengers[index]?.gender && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.passengers[index].gender}
+                </p>
+              )}
             </div>
 
             <div>
@@ -364,6 +443,11 @@ const Itinerary = () => {
                   setPassengerDetails(newPassengers);
                 }}
               />
+              {validationErrors.passengers[index]?.nationality && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.passengers[index].nationality}
+                </p>
+              )}
             </div>
 
             <div>
@@ -383,6 +467,11 @@ const Itinerary = () => {
                   setPassengerDetails(newPassengers);
                 }}
               />
+              {validationErrors.passengers[index]?.dateOfBirth && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.passengers[index].dateOfBirth}
+                </p>
+              )}
             </div>
 
             <div className="col-span-2">
@@ -402,10 +491,23 @@ const Itinerary = () => {
                   setPassengerDetails(newPassengers);
                 }}
               />
+              {validationErrors.passengers[index]?.passportNumber && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.passengers[index].passportNumber}
+                </p>
+              )}
             </div>
           </div>
         </div>
       ))}
+      {validationErrors.passengers.some((error) =>
+        Object.values(error).some((value) => value !== "")
+      ) && (
+        <div className="mt-4 bg-yellow-100 text-yellow-800 p-4 rounded-md border border-yellow-300 flex items-center">
+          <AlertTriangle className="h-5 w-5 mr-2" />
+          Please fill in all required fields for all passengers
+        </div>
+      )}
     </div>
   );
 
@@ -425,6 +527,11 @@ const Itinerary = () => {
               setContactInfo({ ...contactInfo, email: e.target.value })
             }
           />
+          {validationErrors.contact?.email && (
+            <p className="text-red-500 text-sm mt-1">
+              {validationErrors.contact.email}
+            </p>
+          )}
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2">
@@ -439,9 +546,21 @@ const Itinerary = () => {
                 setContactInfo({ ...contactInfo, phoneNumber: e.target.value })
               }
             />
+            {validationErrors.contact?.phoneNumber && (
+              <p className="text-red-500 text-sm mt-1">
+                {validationErrors.contact.phoneNumber}
+              </p>
+            )}
           </div>
         </div>
       </div>
+      {(validationErrors.contact?.email ||
+        validationErrors.contact?.phoneNumber) && (
+        <div className="mt-4 bg-yellow-100 text-yellow-800 p-4 rounded-md border border-yellow-300 flex items-center">
+          <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+          <span>Please fill in all required contact information</span>
+        </div>
+      )}
     </div>
   );
 
@@ -557,6 +676,16 @@ const Itinerary = () => {
   };
 
   const handleContinueToCheckout = () => {
+    const isContactValid = validateContactInfo();
+    
+    if (!isContactValid) {
+      // Scroll to the contact form to show errors
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+      });
+      return;
+    }
     const totalPrice = calculateTotalPrice();
     navigate("/checkout", {
       state: {
@@ -568,6 +697,18 @@ const Itinerary = () => {
         travelClass,
       },
     });
+  };
+
+  const handleNextStep = () => {
+    let isValid = true;
+    if (currentStep === 3) {
+      isValid = validatePassengerDetails();
+    } else if (currentStep === 4) {
+      isValid = validateContactInfo();
+    }
+    if (isValid) {
+      setCurrentStep(currentStep + 1);
+    }
   };
 
   const renderCurrentStep = () => {
@@ -616,7 +757,7 @@ const Itinerary = () => {
               )}
               {currentStep < steps.length && (
                 <button
-                  onClick={() => setCurrentStep(currentStep + 1)}
+                  onClick={handleNextStep}
                   className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors ml-auto"
                 >
                   Continue

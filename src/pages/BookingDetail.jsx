@@ -19,6 +19,7 @@ import ticketGenerator from "../utils/ticketGenerator";
 import ConfirmationModal from "../components/ConfirmationModal";
 import axiosInstance from "../config/axiosInstance";
 import { updateBookingStatus } from "../redux/bookingSlice";
+import { DateTime } from "luxon";
 
 const BookingDetail = () => {
   const { id } = useParams();
@@ -105,6 +106,11 @@ const BookingDetail = () => {
     setIsChatSidebarOpen(true);
   };
 
+  const displayDate = (dateStr, timezone) =>
+    DateTime.fromISO(dateStr, { zone: "utc" })
+      .setZone(timezone)
+      .toLocaleString(DateTime.DATETIME_MED);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {isChatSidebarOpen && (
@@ -144,12 +150,19 @@ const BookingDetail = () => {
                         "N/A"}
                     </p>
                     <p className="text-sm text-gray-500">Departure</p>
+                    <p className="text-sm text-gray-400">
+                      {displayDate(
+                        booking.flightId.segments[0].departureTime,
+                        booking.flightId.segments[0].departureAirport
+                          ?.timezone || "UTC"
+                      )}
+                    </p>
                   </div>
                   <div className="flex-1 px-8">
                     <div className="h-0.5 bg-blue-600 relative">
-                      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                      {/* <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                         <Plane className="w-4 h-4 text-blue-600 rotate-90" />
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                   <div className="text-right">
@@ -159,11 +172,21 @@ const BookingDetail = () => {
                       ]?.arrivalAirport?.name || "N/A"}
                     </p>
                     <p className="text-sm text-gray-500">Arrival</p>
+                    <p className="text-sm text-gray-400">
+                      {displayDate(
+                        booking.flightId.segments[
+                          booking.flightId.segments.length - 1
+                        ].arrivalTime,
+                        booking.flightId.segments[
+                          booking.flightId.segments.length - 1
+                        ].arrivalAirport?.timezone || "UTC"
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
+              <Plane className="w-6 h-6 text-blue-600 rotate-90" />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm text-gray-500">Flight Number</p>
