@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import AirlineLayout from "../../components/AirlineSidebar";
 import StatsCard from "../../components/StatsCard";
@@ -12,6 +13,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  Cell,
 } from "recharts";
 
 const Dashboard = () => {
@@ -20,6 +22,7 @@ const Dashboard = () => {
     totalBookings: 0,
     totalTrips: 0,
   });
+  const [activeIndex, setActiveIndex] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -38,24 +41,53 @@ const Dashboard = () => {
     {
       name: "Total Aircraft",
       value: stats.totalAircraft,
-      color: "#93C5FD",
+      color: "#60A5FA", // Brighter blue
+      icon: "✈️",
     },
     {
       name: "Total Bookings",
       value: stats.totalBookings,
-      color: "#86EFAC",
+      color: "#34D399", // Brighter green
+      icon: "🎫",
     },
     {
       name: "Total Trips",
       value: stats.totalTrips,
-      color: "#FDE68A",
+      color: "#FBBF24", // Brighter yellow
+      icon: "🛣️",
     },
   ];
 
+  const handleMouseOver = (data, index) => {
+    setActiveIndex(index);
+  };
+
+  const handleMouseLeave = () => {
+    setActiveIndex(null);
+  };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+          <p className="text-lg font-semibold flex items-center gap-2">
+            <span>{data.icon}</span>
+            {label}
+          </p>
+          <p className="text-gray-600 mt-1">
+            Count: <span className="font-semibold">{data.value}</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <AirlineLayout>
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6">
+      <div className="p-6 bg-gray-50">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">
           Welcome to the Airline Authority Dashboard
         </h2>
 
@@ -81,27 +113,66 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Stats Chart - Now integrated directly in Dashboard */}
-        <div className="bg-white rounded-lg shadow-md p-6 w-full mt-8">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold">Statistics Overview</h3>
+        {/* Enhanced Stats Chart */}
+        <div className="bg-white rounded-lg shadow-lg p-6 w-full mt-8">
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold text-gray-800">
+              Statistics Overview
+            </h3>
+            <p className="text-gray-500 mt-1">
+              Visual representation of key metrics
+            </p>
           </div>
-          <div className="h-64 w-full">
+          <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    padding: "8px",
+              <BarChart
+                data={chartData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#E5E7EB"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: '#6B7280' }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                />
+                <YAxis
+                  tick={{ fill: '#6B7280' }}
+                  axisLine={{ stroke: '#E5E7EB' }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  formatter={(value) => <span className="text-gray-600">{value}</span>}
+                  wrapperStyle={{
+                    paddingTop: '20px'
                   }}
                 />
-                <Legend />
-                <Bar dataKey="value" name="Count" fill="#93C5FD" />
+                <Bar
+                  dataKey="value"
+                  name="Count"
+                  radius={[4, 4, 0, 0]}
+                  onMouseOver={handleMouseOver}
+                  onMouseLeave={handleMouseLeave}
+                  animationDuration={1500}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={entry.name}
+                      fill={entry.color}
+                      fillOpacity={activeIndex === index ? 1 : 0.75}
+                      stroke={entry.color}
+                      strokeWidth={activeIndex === index ? 2 : 0}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
