@@ -3,7 +3,7 @@ import store from "../redux/store";
 import { logout, updateUserProfile } from "../redux/userSlice";
 
 const axiosInstance = axios.create({
-  baseURL: "https://skyscroll-backend.onrender.com",
+  baseURL: import.meta.env.VITE_BASE_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
