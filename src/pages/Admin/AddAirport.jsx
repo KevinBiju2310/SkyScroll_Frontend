@@ -46,7 +46,7 @@ const AddAirport = () => {
   const fetchTimeZone = async (lat, lng) => {
     try {
       const response = await axios.get(
-        `http://api.timezonedb.com/v2.1/get-time-zone?key=${TIMEZONE_API_KEY}&format=json&by=position&lat=${lat}&lng=${lng}`
+        `https://api.timezonedb.com/v2.1/get-time-zone?key=${TIMEZONE_API_KEY}&format=json&by=position&lat=${lat}&lng=${lng}`
       );
 
       const { zoneName } = response.data; // Extract timezone
