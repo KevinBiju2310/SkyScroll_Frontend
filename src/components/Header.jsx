@@ -32,7 +32,7 @@ const Header = () => {
 
   useEffect(() => {
     if (user) {
-      const newSocket = io("https://skyscroll-backend.onrender.com", {
+      const newSocket = io("http://localhost:5000", {
         withCredentials: true,
       });
 

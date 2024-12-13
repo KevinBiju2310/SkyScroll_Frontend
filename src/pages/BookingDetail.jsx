@@ -152,8 +152,8 @@ const BookingDetail = () => {
                     <p className="text-sm text-gray-500">Departure</p>
                     <p className="text-sm text-gray-400">
                       {displayDate(
-                        booking.flightId.segments[0].departureTime,
-                        booking.flightId.segments[0].departureAirport
+                        booking.flightId.segments?.[0].departureTime,
+                        booking.flightId.segments?.[0].departureAirport
                           ?.timezone || "UTC"
                       )}
                     </p>
@@ -168,16 +168,16 @@ const BookingDetail = () => {
                   <div className="text-right">
                     <p className="text-lg font-semibold">
                       {booking.flightId.segments?.[
-                        booking.flightId.segments.length - 1
+                        booking.flightId.segments?.length - 1
                       ]?.arrivalAirport?.name || "N/A"}
                     </p>
                     <p className="text-sm text-gray-500">Arrival</p>
                     <p className="text-sm text-gray-400">
                       {displayDate(
-                        booking.flightId.segments[
-                          booking.flightId.segments.length - 1
+                        booking.flightId.segments?.[
+                          booking.flightId.segments?.length - 1
                         ].arrivalTime,
-                        booking.flightId.segments[
+                        booking.flightId.segments?.[
                           booking.flightId.segments.length - 1
                         ].arrivalAirport?.timezone || "UTC"
                       )}

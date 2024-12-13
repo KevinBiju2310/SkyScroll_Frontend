@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import {
   TextField,
   Button,
@@ -14,8 +15,7 @@ import axiosInstance from "../config/axiosInstance";
 import OtpForm from "./OtpForm";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
-const client_id =
-  "1084384237911-tts03h5ai0d2p0alrj03283s7hainnqs.apps.googleusercontent.com";
+const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const RegisterForm = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
@@ -61,7 +61,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: "Google registration failed!",
+        message: error.response.data.error,
         isError: true,
       });
     }
