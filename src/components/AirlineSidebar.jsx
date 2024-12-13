@@ -38,7 +38,7 @@ const LayoutComponent = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      const newSocket = io("http://localhost:5000", {
+      const newSocket = io("https://skyscroll-backend.onrender.com", {
         withCredentials: true,
       });
 
