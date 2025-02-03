@@ -18,6 +18,7 @@ import { logout } from "../../src/redux/userSlice";
 import { useNavigate, Link } from "react-router-dom";
 import io from "socket.io-client";
 import NotificationsDropdown from "./NotificationDropdown";
+import axiosInstance from "../config/axiosInstance";
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -99,9 +100,14 @@ const Header = () => {
     setPopupContent("register");
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/logout");
+      dispatch(logout());
+      navigate("/");
+    } catch (error) {
+      console.error("Error Occured: ", error);
+    }
   };
 
   useEffect(() => {
