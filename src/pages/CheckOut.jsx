@@ -9,7 +9,7 @@ import Footer from "../components/Footer";
 import { useSelector } from "react-redux";
 
 const stripePromise = loadStripe(
-  "pk_test_51QKPOPDRGApPeaXHdkWLkwl4P210wyUdl2wtyLmFYoQRpckYNKmeUxiVR07au35Epa5ggBhu7TzSmj6u3bYjccMN003J23EqiZ"
+  import.meta.env.VITE_STRIPE_SECRET
 );
 
 const CheckOut = () => {
