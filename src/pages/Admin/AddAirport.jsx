@@ -18,10 +18,9 @@ import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import axios from "axios";
 
-mapboxgl.accessToken =
-  "pk.eyJ1Ijoic2t5c2Nyb2xsIiwiYSI6ImNtMjdmcDVsdjBua3kybHM2Yjg5eHFjZW8ifQ.DDjEvia0H06UVd5hFCzGPw";
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESSTOKEN;
 
-const TIMEZONE_API_KEY = "HQ96ADMXAA8Q"; // Replace with your TimeZoneDB API key
+const TIMEZONE_API_KEY = import.meta.env.VITE_TIMEZONE_API;
 
 const AddAirport = () => {
   const navigate = useNavigate();

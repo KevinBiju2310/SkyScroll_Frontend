@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
-import { Search, MapPinCheckInside, Clock, Plane } from "lucide-react";
+import { Search, MapPinCheckInside, Clock } from "lucide-react";
 import axiosInstance from "../../config/axiosInstance";
 import Map, {
   Marker,
@@ -13,8 +13,7 @@ import Map, {
 } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const MAPBOX_TOKEN =
-  "pk.eyJ1Ijoic2t5c2Nyb2xsIiwiYSI6ImNtMjdmcDVsdjBua3kybHM2Yjg5eHFjZW8ifQ.DDjEvia0H06UVd5hFCzGPw";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESSTOKEN;
 
 const FlightTracking = () => {
   const [trips, setTrips] = useState([]);

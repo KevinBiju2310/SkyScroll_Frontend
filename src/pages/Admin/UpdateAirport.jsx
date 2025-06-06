@@ -5,8 +5,7 @@ import Map, { Marker } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css"; // Import Mapbox styles
 import { AdminLayout } from "../../components/AdminLayout";
 
-const MAPBOX_TOKEN =
-  "pk.eyJ1Ijoic2t5c2Nyb2xsIiwiYSI6ImNtMjdmcDVsdjBua3kybHM2Yjg5eHFjZW8ifQ.DDjEvia0H06UVd5hFCzGPw";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESSTOKEN;
 
 const UpdateAirport = () => {
   const { id } = useParams();
@@ -86,7 +85,7 @@ const UpdateAirport = () => {
       //   alert("Airport updated successfully!");
       navigate("/admin/airports"); // Navigate back to the airport list
     } catch (err) {
-      alert("Airport name exists")
+      alert("Airport name exists");
       setError(err.message || "Failed to update airport");
     }
   };
